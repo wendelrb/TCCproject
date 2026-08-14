@@ -21,5 +21,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["tests/**/*.ts", "app/**/*.ts", "supabase/functions/**/*.ts"]
+  "include": [
+    "tests/**/*.ts",
+    "app/**/*.ts",
+    "scripts/**/*.ts",
+    "supabase/functions/_shared/**/*.ts"
+  ],
+  "//": "Os entries das Edge Functions rodam em Deno (globais Deno.*, specifiers npm:) e são verificados por `npm run check:deno`, não pelo tsc."
 }

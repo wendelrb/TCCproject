@@ -31,6 +31,17 @@ parada até que `www.gov.br` (e o host que sirva os arquivos de dados abertos da
 seja liberado na política de egresso do ambiente, ou até que os arquivos cheguem por
 outro caminho autorizado.
 
+O pipeline (`supabase/functions/ingest-anp` + `scripts/ingest-anp.ts`) foi construído e
+testado contra fixtures, mas **nunca executado contra a fonte**. Enquanto não rodar:
+
+- o contrato de colunas em `_shared/anp/colunas.ts` é **hipótese**, não observação
+  (A-016);
+- nenhuma linha desta tabela de proveniência pode ser preenchida, porque não há arquivo,
+  não há hash e não há período coberto para registrar.
+
+Quando a fonte abrir, a primeira execução ou confirma o contrato ou falha listando o
+cabeçalho real — e é ela que gera a primeira entrada válida aqui.
+
 ---
 
 ## Fontes previstas (ainda não ingeridas, sem entrada válida)

@@ -159,3 +159,47 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   original não é persistido.
 - **Alternativa descartada:** guardar o arquivo original para reprocessar — o arquivo é
   justamente onde os dados pessoais estariam.
+
+## A-015 — `semana_fim` quando a coluna não vem no arquivo
+
+- **Status:** DECIDIDA
+- **Dúvida:** o schema exige `semana_fim NOT NULL` e maior que `semana_inicio`. Nem toda
+  vintage do arquivo traz a coluna de data final.
+- **Decisão:** quando ausente (ou incoerente), deriva `semana_inicio + 6` e **conta
+  quantas linhas foram derivadas**, expondo o número no relatório da execução. Derivação
+  silenciosa seria dado inventado sem rastro.
+- **Alternativa descartada:** descartar a linha — jogaria fora preço real por causa de
+  metadado ausente.
+
+## A-016 — Contrato de colunas declarado sem verificação contra a fonte
+
+- **Status:** DECIDIDA, com dívida explícita
+- **Dúvida:** o egresso para o host da ANP está bloqueado, então os nomes de coluna em
+  `_shared/anp/colunas.ts` são **candidatos declarados, não observados**.
+- **Decisão:** resolver coluna **por nome**, com casamento exato tendo precedência sobre
+  aproximado, e **falhar alto** listando cabeçalho recebido versus esperado quando um
+  campo obrigatório não resolve. Jamais assumir posição fixa de coluna.
+- **Alternativa descartada:** indexar por posição — funcionaria no primeiro arquivo e
+  carregaria número na coluna errada, em silêncio, no primeiro que mudasse de layout.
+- **Dívida:** a primeira execução contra o arquivo real vai confirmar ou derrubar esses
+  nomes. Enquanto não rodar, **o parser está não validado contra a fonte**.
+
+## A-017 — Dependências novas
+
+- **Status:** DECIDIDA
+- `npm:postgres@3.4.5` (Edge Function): cliente Postgres para upsert em lote —
+  `supabase-js` não expressa `ON CONFLICT` sobre índice parcial, que é o mecanismo de
+  idempotência definido na Tarefa 1.
+- `deno` (devDependency): verificar por `deno check` que o entry da Edge Function
+  realmente compila no runtime em que vai rodar, em vez de supor.
+- **Alternativa descartada:** deixar o entry Deno fora de qualquer checagem de tipos —
+  entregaria código de produção que ninguém compilou.
+
+## A-018 — `municipio_ibge` fica nulo nesta fase
+
+- **Status:** DECIDIDA
+- **Dúvida:** A-008 previa enriquecer com código IBGE a partir da tabela `municipios`.
+- **Decisão:** a ingestão grava `municipio_ibge` nulo enquanto `municipios` estiver
+  vazia. O casamento e a unicidade seguem por `municipio_norm`, como A-008 já definia.
+- **Alternativa descartada:** bloquear a ingestão até haver IBGE — a fonte do IBGE está
+  atrás do mesmo bloqueio de rede, e travaria a série inteira por um enriquecimento.

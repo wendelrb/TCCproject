@@ -22,21 +22,31 @@ export const CONEXAO = {
   password: process.env.PGPASSWORD ?? '',
 } as const;
 
-const BANCO_TESTE = process.env.PGDATABASE_TESTE ?? 'tcc_rls_test';
+const BANCO_PADRAO = process.env.PGDATABASE_TESTE ?? 'tcc_rls_test';
 
 async function lerSql(diretorio: string, arquivo: string): Promise<string> {
   return readFile(path.join(diretorio, arquivo), 'utf8');
 }
 
-/** Sobe um banco limpo com shim + migrations aplicados. */
-export async function prepararBanco(): Promise<Pool> {
+/**
+ * Sobe um banco limpo com shim + migrations aplicados.
+ *
+ * O nome é parametrizável porque `node --test` roda cada arquivo de teste em
+ * processo próprio e em paralelo: dois arquivos derrubando o MESMO banco se
+ * atropelam.
+ */
+export async function prepararBanco(banco: string = BANCO_PADRAO): Promise<Pool> {
+  if (!/^[a-z_][a-z0-9_]*$/.test(banco)) {
+    throw new Error(`nome de banco inválido: ${banco}`);
+  }
+
   const admin = new pg.Client({ ...CONEXAO, database: 'postgres' });
   await admin.connect();
-  await admin.query(`drop database if exists ${BANCO_TESTE} with (force)`);
-  await admin.query(`create database ${BANCO_TESTE}`);
+  await admin.query(`drop database if exists ${banco} with (force)`);
+  await admin.query(`create database ${banco}`);
   await admin.end();
 
-  const pool = new pg.Pool({ ...CONEXAO, database: BANCO_TESTE, max: 4 });
+  const pool = new pg.Pool({ ...CONEXAO, database: banco, max: 4 });
 
   const cliente = await pool.connect();
   try {

@@ -1,0 +1,8 @@
+{
+  "//": "Config do runtime Deno das Edge Functions. Separado do package.json do Node de propósito: o front e os scripts rodam em Node, as functions em Deno.",
+  "nodeModulesDir": "auto",
+  "imports": {
+    "postgres": "npm:postgres@3.4.5"
+  },
+  "lock": false
+}
