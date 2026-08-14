@@ -67,3 +67,16 @@ Rotas: `/` preço e benchmark · `/previsao` · `/placar` · `/importar`
 
 A troca de organização no topo muda o `auth.uid()` e a RLS de produção filtra de
 verdade — não é mock. Nenhum número dessas telas é métrica do produto.
+
+## Versão estática navegável (para compartilhar)
+
+```bash
+node scripts/exportar-demo.ts demo.json            # extrai o estado do banco tcc_demo
+node -e "const f=require('fs');f.writeFileSync('demo-diesel.html', \
+  f.readFileSync('scripts/demo-estatica.template.html','utf8') \
+   .replace('/*__DADOS__*/', f.readFileSync('demo.json','utf8')))"
+```
+
+Gera um HTML único, sem dependência externa. É uma **captura**: não tem banco
+atrás, então a RLS não está sendo exercitada ali. Cada tela é linkável por hash
+(`#previsao`, `#placar`, …).

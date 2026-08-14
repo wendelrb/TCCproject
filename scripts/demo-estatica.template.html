@@ -1,0 +1,665 @@
+<title>Painel Diesel S-10</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ground:#f4f6f7; --surface:#ffffff; --surface-2:#eef1f3;
+    --ink:#101619; --ink-2:#48575f; --ink-3:#75858d;
+    --hairline:#dde3e6;
+    --accent:#2a78d6; --accent-suave:#e7f0fb;
+    --dado-2:#eb6834;
+    --alerta:#b3261e; --alerta-suave:#fdecea; --aviso-bg:#b3261e; --aviso-ink:#ffffff;
+    --bom:#1c7a4a; --bom-suave:#e8f5ee;
+    --atencao:#a86400; --atencao-suave:#fdf3e0;
+    --sombra:0 1px 2px rgba(16,22,25,.06), 0 8px 24px -12px rgba(16,22,25,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --ground:#0e1316; --surface:#171e22; --surface-2:#1f282d;
+      --ink:#eef2f4; --ink-2:#a9b8c0; --ink-3:#7d8d95;
+      --hairline:#2a353b;
+      --accent:#3987e5; --accent-suave:#12243a;
+      --dado-2:#d95926;
+      --alerta:#f2837c; --alerta-suave:#33191a; --aviso-bg:#7f1d18; --aviso-ink:#ffe9e7;
+      --bom:#5cc48d; --bom-suave:#14291f;
+      --atencao:#e0a33c; --atencao-suave:#2b2113;
+      --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --ground:#0e1316; --surface:#171e22; --surface-2:#1f282d;
+    --ink:#eef2f4; --ink-2:#a9b8c0; --ink-3:#7d8d95;
+    --hairline:#2a353b;
+    --accent:#3987e5; --accent-suave:#12243a;
+    --dado-2:#d95926;
+    --alerta:#f2837c; --alerta-suave:#33191a; --aviso-bg:#7f1d18; --aviso-ink:#ffe9e7;
+    --bom:#5cc48d; --bom-suave:#14291f;
+    --atencao:#e0a33c; --atencao-suave:#2b2113;
+    --sombra:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -12px rgba(0,0,0,.6);
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  /* Números são o conteúdo deste produto: monoespaçado e tabular em todo lugar. */
+  .num, table td:not(:first-child), .kpi-valor, .mono {
+    font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+    font-variant-numeric:tabular-nums;
+  }
+  h1,h2,h3 { margin:0; text-wrap:balance; letter-spacing:-.015em; }
+  a { color:var(--accent); }
+
+  .aviso-demo {
+    position:sticky; top:0; z-index:50;
+    background:var(--aviso-bg); color:var(--aviso-ink);
+    padding:9px 16px; text-align:center;
+    font-size:12px; font-weight:700; letter-spacing:.03em;
+  }
+
+  .casca { max-width:1180px; margin:0 auto; padding:20px 16px 64px; }
+
+  header.topo {
+    display:flex; justify-content:space-between; align-items:flex-end;
+    gap:20px; flex-wrap:wrap; padding-bottom:16px;
+    border-bottom:1px solid var(--hairline); margin-bottom:20px;
+  }
+  .marca { font-size:20px; font-weight:650; }
+  .marca span { color:var(--accent); }
+  .sub { color:var(--ink-2); font-size:13px; margin-top:3px; }
+  .rotulo {
+    font-size:11px; text-transform:uppercase; letter-spacing:.09em;
+    color:var(--ink-3); font-weight:600;
+  }
+
+  select {
+    font:inherit; font-size:13px; padding:7px 10px; border-radius:7px;
+    border:1px solid var(--hairline); background:var(--surface); color:var(--ink);
+  }
+
+  .corpo { display:grid; grid-template-columns:210px 1fr; gap:24px; align-items:start; }
+  @media (max-width:820px){ .corpo { grid-template-columns:1fr; } }
+
+  nav.rail { display:flex; flex-direction:column; gap:2px; position:sticky; top:56px; }
+  @media (max-width:820px){ nav.rail { position:static; flex-direction:row; flex-wrap:wrap; } }
+  nav.rail button {
+    font:inherit; font-size:13.5px; text-align:left; cursor:pointer;
+    padding:9px 12px; border-radius:7px; border:1px solid transparent;
+    background:transparent; color:var(--ink-2);
+  }
+  nav.rail button:hover { background:var(--surface-2); color:var(--ink); }
+  nav.rail button[aria-current="true"] {
+    background:var(--accent-suave); color:var(--accent);
+    border-color:color-mix(in srgb, var(--accent) 30%, transparent); font-weight:640;
+  }
+  nav.rail button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  .cartao {
+    background:var(--surface); border:1px solid var(--hairline);
+    border-radius:11px; padding:16px 18px; box-shadow:var(--sombra);
+  }
+  .cartao + .cartao { margin-top:16px; }
+  .cartao h2 { font-size:15px; font-weight:640; margin-bottom:4px; }
+  .cartao .nota { color:var(--ink-2); font-size:13px; margin:0 0 14px; }
+
+  .kpis { display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); margin-bottom:16px; }
+  .kpi-valor { font-size:30px; font-weight:640; letter-spacing:-.02em; line-height:1.15; }
+  .kpi-valor small { font-size:14px; font-weight:400; color:var(--ink-2); }
+  .kpi-rodape { font-size:12px; color:var(--ink-3); margin-top:5px; }
+
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th {
+    text-align:right; padding:7px 10px; color:var(--ink-3);
+    font-size:11px; text-transform:uppercase; letter-spacing:.06em; font-weight:640;
+    border-bottom:1px solid var(--hairline); white-space:nowrap;
+  }
+  td { text-align:right; padding:8px 10px; border-bottom:1px solid var(--hairline); }
+  th:first-child, td:first-child { text-align:left; }
+  tbody tr:last-child td { border-bottom:0; }
+  .rolagem { overflow-x:auto; }
+
+  .pilula {
+    display:inline-block; padding:2px 9px; border-radius:999px;
+    font-size:11px; font-weight:700; letter-spacing:.03em;
+    font-family:ui-sans-serif,system-ui,sans-serif;
+  }
+  .p-alta{ background:var(--alerta-suave); color:var(--alerta); }
+  .p-queda{ background:var(--accent-suave); color:var(--accent); }
+  .p-estavel{ background:var(--surface-2); color:var(--ink-2); }
+  .p-ficticio{ background:var(--alerta-suave); color:var(--alerta); border:1px solid currentColor; }
+
+  .faixa {
+    display:flex; gap:11px; padding:12px 14px; border-radius:9px;
+    font-size:13.5px; line-height:1.5; margin-bottom:14px;
+  }
+  .faixa strong { font-weight:660; }
+  .f-alerta{ background:var(--alerta-suave); color:var(--ink); border-left:3px solid var(--alerta); }
+  .f-bom{ background:var(--bom-suave); color:var(--ink); border-left:3px solid var(--bom); }
+  .f-atencao{ background:var(--atencao-suave); color:var(--ink); border-left:3px solid var(--atencao); }
+  .f-info{ background:var(--accent-suave); color:var(--ink); border-left:3px solid var(--accent); }
+
+  .legenda { display:flex; gap:18px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-2); margin-bottom:8px; }
+  .legenda i { width:11px; height:11px; border-radius:3px; display:inline-block; vertical-align:-1px; margin-right:6px; }
+
+  .grafico { position:relative; }
+  .dica {
+    position:absolute; top:6px; right:6px; pointer-events:none;
+    background:var(--surface); border:1px solid var(--hairline); border-radius:7px;
+    padding:7px 11px; font-size:12px; box-shadow:var(--sombra); opacity:0; transition:opacity .12s;
+  }
+  .dica.visivel { opacity:1; }
+
+  .abas { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+  .abas button {
+    font:inherit; font-size:13px; cursor:pointer; padding:7px 12px;
+    border-radius:7px; border:1px solid var(--hairline);
+    background:var(--surface); color:var(--ink-2);
+  }
+  .abas button[aria-pressed="true"] { background:var(--ink); color:var(--surface); border-color:var(--ink); }
+  .abas button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  pre.csv {
+    background:var(--surface-2); border:1px solid var(--hairline); border-radius:8px;
+    padding:12px 14px; overflow-x:auto; font-size:12px; line-height:1.6; margin:0;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  }
+  .tela { display:none; }
+  .tela.ativa { display:block; animation:entra .18s ease-out; }
+  @keyframes entra { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .tela.ativa{ animation:none; } }
+
+  .listinha { margin:0; padding-left:18px; font-size:13.5px; color:var(--ink-2); }
+  .listinha li { margin:3px 0; }
+  .rodape { margin-top:28px; padding-top:16px; border-top:1px solid var(--hairline);
+            font-size:12.5px; color:var(--ink-3); line-height:1.65; }
+  code { font-family:ui-monospace,Menlo,monospace; font-size:.92em;
+         background:var(--surface-2); padding:1px 5px; border-radius:4px; }
+</style>
+
+<div class="aviso-demo">
+  DEMONSTRAÇÃO — TODOS OS NÚMEROS SÃO FICTÍCIOS. NÃO SÃO DADOS DA ANP E NÃO SÃO RESULTADO DE BACKTEST.
+</div>
+
+<div class="casca">
+  <header class="topo">
+    <div>
+      <h1 class="marca">Inteligência de preço <span>· Diesel S-10</span></h1>
+      <p class="sub" id="sub-org"></p>
+    </div>
+    <div>
+      <div class="rotulo" style="margin-bottom:5px">Organização</div>
+      <select id="troca-org" aria-label="Trocar de organização"></select>
+    </div>
+  </header>
+
+  <div class="corpo">
+    <nav class="rail" id="rail" aria-label="Telas do produto"></nav>
+
+    <main id="conteudo">
+      <!-- PREÇO E BENCHMARK -->
+      <section class="tela ativa" data-tela="preco">
+        <div class="kpis" id="kpis"></div>
+        <div class="cartao">
+          <h2>Histórico semanal</h2>
+          <p class="nota">Preço médio de revenda, últimas 104 semanas. Passe o mouse para ler cada semana.</p>
+          <div class="legenda"><span><i style="background:var(--accent)"></i>Preço médio observado</span></div>
+          <div class="grafico" id="g-historico"></div>
+        </div>
+        <div class="cartao">
+          <h2>Benchmark — o que você pagou versus a média da sua região</h2>
+          <div id="benchmark"></div>
+        </div>
+      </section>
+
+      <!-- PREVISÃO -->
+      <section class="tela" data-tela="previsao">
+        <div class="faixa f-info">
+          <div><strong>Como ler.</strong> A linha tracejada é a previsão pontual; a faixa é o intervalo
+          P10–P90, vindo dos quantis empíricos dos resíduos walk-forward daquela UF. A classe usa banda de
+          estabilidade explícita, calibrada pelo ruído histórico da própria UF. Intervalo largo é
+          informação, não defeito.</div>
+        </div>
+        <div class="cartao">
+          <h2>Previsão de 1 a 4 semanas</h2>
+          <div class="legenda">
+            <span><i style="background:var(--accent)"></i>Observado</span>
+            <span><i style="background:var(--dado-2)"></i>Previsão (faixa = P10–P90)</span>
+          </div>
+          <div class="grafico" id="g-previsao"></div>
+        </div>
+        <div class="cartao">
+          <h2>Detalhe por horizonte</h2>
+          <div class="rolagem"><table id="t-previsao"></table></div>
+        </div>
+      </section>
+
+      <!-- PLACAR -->
+      <section class="tela" data-tela="placar">
+        <div class="faixa f-alerta">
+          <div><strong>Estes números são fictícios.</strong> Não saíram de backtest contra dado real.
+          O motor que os calculou é o de verdade, mas a série de entrada é inventada.
+          Não cite nenhum destes valores como acurácia do produto.</div>
+        </div>
+        <div class="cartao">
+          <h2>Placar das últimas 12 semanas <span class="pilula p-ficticio">FICTÍCIO</span></h2>
+          <p class="nota">O produto mostra o modelo escolhido lado a lado com o naive. Se o modelo não
+          estiver batendo o naive, é isso que aparece na tela — a regra do projeto é reportar, não esconder.</p>
+          <div class="rolagem"><table id="t-placar"></table></div>
+          <div id="veredito" style="margin-top:14px"></div>
+        </div>
+      </section>
+
+      <!-- RELATÓRIO -->
+      <section class="tela" data-tela="relatorio">
+        <div class="kpis" id="kpis-relatorio"></div>
+        <div class="cartao">
+          <h2>Relatório mensal — preço pago versus média da região</h2>
+          <p class="nota">A média da região é ponderada pelos seus litros, não a média simples das semanas.
+          Sem isso, um mês em que o volume se concentra numa semana cara pareceria melhor do que foi.</p>
+          <div class="rolagem"><table id="t-relatorio"></table></div>
+        </div>
+        <div class="cartao">
+          <h2>Exportação</h2>
+          <p class="nota">O produto exporta em CSV com separador <code>;</code>, vírgula decimal e BOM —
+          o Excel em pt-BR abre sem assistente de importação. Prévia do arquivo:</p>
+          <pre class="csv" id="csv"></pre>
+        </div>
+      </section>
+
+      <!-- ALERTA -->
+      <section class="tela" data-tela="alerta">
+        <div class="faixa f-atencao">
+          <div><strong>Nenhum e-mail foi enviado.</strong> A Resend não está conectada neste ambiente.
+          Abaixo está a peça renderizada pelo mesmo template que o job semanal usa.</div>
+        </div>
+        <div class="cartao">
+          <h2>Cabeçalho do envio</h2>
+          <div class="rolagem"><table id="t-email"></table></div>
+        </div>
+        <div class="cartao" style="padding:0; overflow:hidden">
+          <iframe id="previa-email" title="Prévia do alerta semanal"
+                  style="width:100%; height:730px; border:0; display:block; background:#f4f3f0"></iframe>
+        </div>
+      </section>
+
+      <!-- IMPORTAR -->
+      <section class="tela" data-tela="importar">
+        <div class="faixa f-info">
+          <div><strong>Esta importação aceita seis colunas, e só elas:</strong>
+          <code>data</code> <code>UF</code> <code>município</code> <code>litros</code>
+          <code>valor total</code> <code>produto</code>. Placa, motorista, CPF e qualquer outro dado
+          pessoal derrubam o arquivo inteiro. A recusa acontece na leitura do <strong>cabeçalho</strong>,
+          antes de qualquer célula ser lida — o valor de uma coluna proibida nunca entra em memória.</div>
+        </div>
+        <div class="cartao">
+          <h2>Escolha um arquivo de exemplo</h2>
+          <div class="abas" id="abas-import">
+            <button type="button" data-caso="ok" aria-pressed="true">Arquivo conforme</button>
+            <button type="button" data-caso="pessoal" aria-pressed="false">Arquivo com placa, motorista e CPF</button>
+          </div>
+          <pre class="csv" id="csv-import"></pre>
+        </div>
+        <div class="cartao" id="resultado-import"></div>
+      </section>
+
+      <!-- COMO FOI FEITO -->
+      <section class="tela" data-tela="sobre">
+        <div class="cartao">
+          <h2>O que é real e o que é fictício</h2>
+          <p class="nota">A distinção mais importante desta demonstração.</p>
+          <div class="faixa f-alerta">
+            <div><strong>Fictício:</strong> todos os números. Preços, abastecimentos, previsões e o placar
+            inteiro. A série de entrada foi gerada por um seed determinístico, nunca coletada da ANP.</div>
+          </div>
+          <div class="faixa f-bom">
+            <div><strong>Real:</strong> o schema e as migrations; a RLS multi-tenant, com teste automatizado
+            provando que uma organização não lê dados da outra; o motor de previsão e o backtest
+            walk-forward, incluindo o teste que muta o futuro da série e exige que nenhuma previsão anterior
+            mude; e o validador de importação, com teste provando que o valor de uma coluna pessoal não
+            vaza para o resultado.</div>
+          </div>
+          <p class="nota" style="margin-top:14px">Esta página é uma <strong>captura estática</strong>: não
+          tem banco atrás, então a RLS não está sendo exercitada aqui. Trocar de organização acima troca o
+          conjunto de dados exportado. Na versão que roda com servidor, a mesma troca muda o
+          <code>auth.uid()</code> e o filtro acontece dentro do Postgres.</p>
+        </div>
+        <div class="cartao">
+          <h2>O que ainda não conectou</h2>
+          <ul class="listinha">
+            <li><strong>ANP</strong> — série real de preços. Bloqueada pela política de rede do ambiente.
+              O pipeline de ingestão está pronto e testado, mas nunca rodou contra a fonte.</li>
+            <li><strong>IBGE</strong> — tabela de municípios. Mesmo bloqueio; o código IBGE fica nulo e o
+              casamento roda por nome normalizado.</li>
+            <li><strong>Banco Central</strong> — PTAX. Não iniciado.</li>
+            <li><strong>Brent</strong> — bloqueado por decisão: licença não verificada. A v1 funciona sem.</li>
+            <li><strong>Resend</strong> — sem chave e sem rede. Faltam o job semanal, o log de envio e o
+              descadastro real.</li>
+            <li><strong>Supabase</strong> — as migrations nunca rodaram num projeto real. Tudo foi validado
+              contra Postgres 16 local; o Supabase roda 17.</li>
+            <li><strong>Importação</strong> — valida de verdade, inclusive a recusa por dado pessoal, mas
+              ainda não persiste o lote.</li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <p class="rodape">
+    Captura estática de uma demonstração navegável. Todo número aqui é fictício e nenhum deles pode ser
+    citado como métrica do produto.
+  </p>
+</div>
+
+<script>
+const DADOS = /*__DADOS__*/;
+
+const TELAS = [
+  ['preco', 'Preço e benchmark'],
+  ['previsao', 'Previsão 1–4 semanas'],
+  ['placar', 'Placar de acurácia'],
+  ['relatorio', 'Relatório mensal'],
+  ['alerta', 'Alerta semanal'],
+  ['importar', 'Importar abastecimentos'],
+  ['sobre', 'O que é real aqui'],
+];
+
+let iOrg = 0;
+
+const nf = (v, c = 3) => v == null || Number.isNaN(v)
+  ? '—'
+  : v.toLocaleString('pt-BR', { minimumFractionDigits: c, maximumFractionDigits: c });
+const dbr = (iso) => iso && iso.includes('-') ? iso.split('-').reverse().join('/') : (iso || '—');
+const dcurta = (iso) => { const [a,m,d] = iso.split('-'); return `${d}/${m}/${a.slice(2)}`; };
+const mesExt = (mes) => {
+  const [a, m] = mes.split('-');
+  const n = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  return `${n[Number(m)-1] || m}/${a}`;
+};
+const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+
+/* ---------- gráfico ---------- */
+function desenhar(alvo, historico, previsao) {
+  const L = 860, A = 268, M = { t: 14, r: 76, b: 30, e: 54 };
+  const todos = [
+    ...historico.map(p => ({ ...p, tipo: 'hist', p10: p.valor, p90: p.valor })),
+    ...(previsao || []).map(p => ({ semana: p.semanaAlvo, valor: p.valor, p10: p.p10, p90: p.p90, tipo: 'prev' })),
+  ];
+  if (!todos.length) { alvo.textContent = 'Sem dados.'; return; }
+
+  const vals = todos.flatMap(p => [p.valor, p.p10, p.p90]);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const folga = (max - min) * 0.12 || 0.1;
+  const y0 = min - folga, y1 = max + folga;
+  const lp = L - M.e - M.r, ap = A - M.t - M.b;
+  const X = i => M.e + (i / Math.max(1, todos.length - 1)) * lp;
+  const Y = v => M.t + ap - ((v - y0) / (y1 - y0)) * ap;
+
+  const iCorte = historico.length - 1;
+  const dHist = historico.map((p, i) => `${i ? 'L' : 'M'} ${X(i).toFixed(1)} ${Y(p.valor).toFixed(1)}`).join(' ');
+
+  let dPrev = '', dBanda = '';
+  if (previsao && previsao.length) {
+    const idx = previsao.map((_, k) => historico.length + k);
+    const x0 = X(iCorte), y00 = Y(historico[iCorte].valor);
+    dPrev = `M ${x0} ${y00} ` + previsao.map((p, k) => `L ${X(idx[k]).toFixed(1)} ${Y(p.valor).toFixed(1)}`).join(' ');
+    dBanda = `M ${x0} ${y00} `
+      + previsao.map((p, k) => `L ${X(idx[k]).toFixed(1)} ${Y(p.p90).toFixed(1)}`).join(' ')
+      + ' ' + previsao.map((p, k) => ({ p, k })).reverse()
+          .map(({ p, k }) => `L ${X(idx[k]).toFixed(1)} ${Y(p.p10).toFixed(1)}`).join(' ')
+      + ` L ${x0} ${y00} Z`;
+  }
+
+  const ticks = [0, .25, .5, .75, 1].map(f => y0 + f * (y1 - y0));
+  const passo = Math.max(1, Math.ceil(todos.length / 8));
+
+  alvo.innerHTML = `
+    <svg viewBox="0 0 ${L} ${A}" width="100%" role="img"
+         aria-label="Série semanal do preço médio de revenda do diesel S-10">
+      ${ticks.map(t => `
+        <line x1="${M.e}" x2="${L - M.r}" y1="${Y(t).toFixed(1)}" y2="${Y(t).toFixed(1)}"
+              stroke="var(--hairline)" stroke-width="1"/>
+        <text x="${M.e - 9}" y="${(Y(t) + 4).toFixed(1)}" text-anchor="end" font-size="11"
+              fill="var(--ink-3)" font-family="ui-monospace,monospace">${t.toFixed(2)}</text>`).join('')}
+      ${todos.map((p, i) => i % passo === 0
+        ? `<text x="${X(i).toFixed(1)}" y="${A - 9}" text-anchor="middle" font-size="10"
+                 fill="var(--ink-3)" font-family="ui-monospace,monospace">${dcurta(p.semana)}</text>` : '').join('')}
+      ${dBanda ? `<path d="${dBanda}" fill="var(--dado-2)" opacity=".17"/>` : ''}
+      <path d="${dHist}" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>
+      ${dPrev ? `<path d="${dPrev}" fill="none" stroke="var(--dado-2)" stroke-width="2" stroke-dasharray="5 4"/>` : ''}
+      <text x="${(X(iCorte) + 7).toFixed(1)}" y="${(Y(historico[iCorte].valor) - 9).toFixed(1)}"
+            font-size="11" font-weight="640" fill="var(--ink-2)">${previsao && previsao.length ? 'hoje' : 'R$ ' + nf(historico[iCorte].valor)}</text>
+      <g id="cursor" style="opacity:0">
+        <line stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 3" y1="${M.t}" y2="${M.t + ap}"/>
+        <circle r="5" stroke="var(--surface)" stroke-width="2"/>
+      </g>
+      ${todos.map((p, i) => `<rect x="${(X(i) - 6).toFixed(1)}" y="${M.t}" width="12" height="${ap}"
+              fill="transparent" data-i="${i}"/>`).join('')}
+    </svg>
+    <div class="dica"></div>`;
+
+  const svg = alvo.querySelector('svg'), dica = alvo.querySelector('.dica');
+  const cursor = svg.querySelector('#cursor');
+  const linha = cursor.querySelector('line'), ponto = cursor.querySelector('circle');
+
+  svg.addEventListener('mousemove', (ev) => {
+    const alvoEl = ev.target.closest('rect[data-i]');
+    if (!alvoEl) return;
+    const p = todos[Number(alvoEl.dataset.i)];
+    const x = X(Number(alvoEl.dataset.i)), y = Y(p.valor);
+    linha.setAttribute('x1', x); linha.setAttribute('x2', x);
+    ponto.setAttribute('cx', x); ponto.setAttribute('cy', y);
+    ponto.setAttribute('fill', p.tipo === 'hist' ? 'var(--accent)' : 'var(--dado-2)');
+    cursor.style.opacity = 1;
+    dica.classList.add('visivel');
+    dica.innerHTML = `<strong class="mono">${dbr(p.semana)}</strong><br><span class="mono">R$ ${nf(p.valor)}/L</span>`
+      + (p.tipo === 'prev' ? `<br><span class="mono" style="color:var(--ink-2)">P10–P90 ${nf(p.p10)}–${nf(p.p90)}</span>` : '');
+  });
+  svg.addEventListener('mouseleave', () => { cursor.style.opacity = 0; dica.classList.remove('visivel'); });
+}
+
+/* ---------- telas ---------- */
+function render() {
+  const d = DADOS[iOrg];
+  const u = d.usuario;
+  document.getElementById('sub-org').textContent = `${u.organizacao} · região base ${u.uf}`;
+
+  // Preço
+  const a = d.precoAtual || {};
+  const corVar = (a.variacaoSemanal ?? 0) > 0 ? 'var(--dado-2)' : (a.variacaoSemanal ?? 0) < 0 ? 'var(--accent)' : 'var(--ink-2)';
+  document.getElementById('kpis').innerHTML = `
+    <div class="cartao">
+      <div class="rotulo">Preço médio ${u.uf} — semana de ${dbr(a.semana)}</div>
+      <div class="kpi-valor">R$ ${nf(a.uf)}<small>/L</small></div>
+      <div class="kpi-rodape">${a.numPostos ?? '—'} postos pesquisados</div>
+    </div>
+    <div class="cartao">
+      <div class="rotulo">Variação sobre a semana anterior</div>
+      <div class="kpi-valor" style="color:${corVar}">${(a.variacaoSemanal ?? 0) > 0 ? '+' : ''}${nf(a.variacaoSemanal)}<small> R$/L</small></div>
+      <div class="kpi-rodape">${(a.variacaoSemanal ?? 0) > 0 ? 'em alta' : (a.variacaoSemanal ?? 0) < 0 ? 'em queda' : 'estável'}</div>
+    </div>
+    <div class="cartao">
+      <div class="rotulo">Seu município (${u.municipio})</div>
+      <div class="kpi-valor">R$ ${nf(a.municipio)}<small>/L</small></div>
+      <div class="kpi-rodape">faixa da UF: ${nf(a.minRegiao)} a ${nf(a.maxRegiao)}</div>
+    </div>`;
+
+  desenhar(document.getElementById('g-historico'), d.historico, null);
+
+  const b = d.benchmark;
+  document.getElementById('benchmark').innerHTML = !b ? '<p>Nenhum abastecimento importado.</p>' : `
+    <div class="faixa ${b.diferencaPercentual > 0 ? 'f-atencao' : 'f-bom'}">
+      <div><strong>Você pagou ${Math.abs(b.diferencaPercentual).toFixed(1)}%
+      ${b.diferencaPercentual > 0 ? 'acima' : 'abaixo'} da média da sua região.</strong><br>
+      ${b.diferencaPercentual > 0 ? 'O excedente soma' : 'A economia soma'}
+      R$ ${b.excedente.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}).replace('-','')}
+      sobre ${b.litros.toLocaleString('pt-BR')} litros.</div>
+    </div>
+    <table><tbody>
+      <tr><td>Preço médio pago</td><td>R$ ${nf(b.precoMedioPago)}</td></tr>
+      <tr><td>Média da região, ponderada pelos seus litros</td><td>R$ ${nf(b.precoMedioRegiao)}</td></tr>
+      <tr><td>Abastecimentos considerados</td><td>${b.compras}</td></tr>
+      <tr><td>Volume total</td><td>${b.litros.toLocaleString('pt-BR')} L</td></tr>
+    </tbody></table>`;
+
+  // Previsão
+  desenhar(document.getElementById('g-previsao'), d.historico.slice(-26), d.previsao);
+  const cls = { ALTA:['p-alta','Alta'], QUEDA:['p-queda','Queda'], ESTAVEL:['p-estavel','Estável'] };
+  document.getElementById('t-previsao').innerHTML = `
+    <thead><tr><th>Horizonte</th><th>Semana-alvo</th><th>Previsto (R$/L)</th><th>P10</th><th>P90</th>
+    <th>Largura</th><th style="text-align:left">Classe</th></tr></thead>
+    <tbody>${d.previsao.map(p => `<tr>
+      <td>${p.horizonte} semana${p.horizonte > 1 ? 's' : ''}</td>
+      <td>${dbr(p.semanaAlvo)}</td>
+      <td><strong>${nf(p.valor)}</strong></td>
+      <td>${nf(p.p10)}</td><td>${nf(p.p90)}</td>
+      <td>±${nf((p.p90 - p.p10) / 2)}</td>
+      <td style="text-align:left"><span class="pilula ${cls[p.classe][0]}">${cls[p.classe][1]}</span></td>
+    </tr>`).join('')}</tbody>`;
+
+  // Placar
+  document.getElementById('t-placar').innerHTML = `
+    <thead><tr><th>Modelo</th><th>Previsões avaliadas</th><th>MAE (R$/L)</th><th>RMSE (R$/L)</th>
+    <th>Cobertura P10–P90</th><th>Acerto direcional</th></tr></thead>
+    <tbody>${d.placar.map(l => `<tr>
+      <td><strong>${l.modelo === 'naive-v1' ? 'naive (referência)' : l.modelo}</strong></td>
+      <td>${l.n}</td><td>${l.mae.toFixed(4)}</td><td>${l.rmse.toFixed(4)}</td>
+      <td>${l.picp.toFixed(1)}%</td><td>${l.direcional.toFixed(1)}%</td>
+    </tr>`).join('')}</tbody>`;
+
+  const mod = d.placar.find(l => l.modelo !== 'naive-v1');
+  const nai = d.placar.find(l => l.modelo === 'naive-v1');
+  const perde = mod && nai && mod.mae >= nai.mae;
+  document.getElementById('veredito').innerHTML = !mod || !nai ? '' : `
+    <div class="faixa ${perde ? 'f-atencao' : 'f-bom'}" style="margin:0">
+      <div><strong>${perde ? `Nesta janela, o modelo NÃO está batendo o naive em ${u.uf}.`
+                           : `Nesta janela, o modelo está à frente do naive em ${u.uf}.`}</strong><br>
+      ${perde ? 'É exatamente este aviso que a especificação exige que apareça no produto, em vez de esconder o resultado ruim.'
+              : `MAE ${mod.mae.toFixed(4)} contra ${nai.mae.toFixed(4)} do naive.`}</div>
+    </div>`;
+
+  // Relatório
+  const r = d.relatorio;
+  const tl = r.reduce((s, m) => s + m.litros, 0);
+  const tv = r.reduce((s, m) => s + m.valorTotal, 0);
+  const te = r.reduce((s, m) => s + m.excedente, 0);
+  document.getElementById('kpis-relatorio').innerHTML = `
+    <div class="cartao"><div class="rotulo">Volume no período</div>
+      <div class="kpi-valor">${tl.toLocaleString('pt-BR',{maximumFractionDigits:0})}<small> L</small></div></div>
+    <div class="cartao"><div class="rotulo">Gasto total</div>
+      <div class="kpi-valor">R$ ${tv.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
+    <div class="cartao"><div class="rotulo">${te >= 0 ? 'Excedente sobre a média da região' : 'Economia sobre a média da região'}</div>
+      <div class="kpi-valor" style="color:${te >= 0 ? 'var(--dado-2)' : 'var(--bom)'}">R$ ${Math.abs(te).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>`;
+
+  document.getElementById('t-relatorio').innerHTML = `
+    <thead><tr><th>Mês</th><th>Abastec.</th><th>Litros</th><th>Gasto (R$)</th><th>Pago (R$/L)</th>
+    <th>Região (R$/L)</th><th>Diferença</th><th>Excedente (R$)</th></tr></thead>
+    <tbody>${r.map(m => `<tr>
+      <td>${mesExt(m.mes)}</td><td>${m.compras}</td>
+      <td>${m.litros.toLocaleString('pt-BR',{maximumFractionDigits:0})}</td>
+      <td>${m.valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td>${m.precoPago.toFixed(3)}</td><td>${m.precoRegiao.toFixed(3)}</td>
+      <td style="color:${m.diferencaPercentual > 0 ? 'var(--dado-2)' : 'var(--bom)'};font-weight:640">
+        ${m.diferencaPercentual > 0 ? '+' : ''}${m.diferencaPercentual.toFixed(1)}%</td>
+      <td>${m.excedente.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+    </tr>`).join('')}</tbody>`;
+
+  document.getElementById('csv').textContent =
+    '# RELATORIO DE DEMONSTRACAO - TODOS OS NUMEROS SAO FICTICIOS\n'
+    + `# organizacao: ${u.organizacao}\n`
+    + 'mes;abastecimentos;litros;valor total;preco pago (R$/L);media regiao (R$/L);diferenca %;excedente (R$)\n'
+    + r.slice(0, 4).map(m => [m.mes, m.compras,
+        m.litros.toLocaleString('pt-BR',{minimumFractionDigits:3}),
+        m.valorTotal.toLocaleString('pt-BR',{minimumFractionDigits:2}),
+        m.precoPago.toLocaleString('pt-BR',{minimumFractionDigits:3}),
+        m.precoRegiao.toLocaleString('pt-BR',{minimumFractionDigits:3}),
+        m.diferencaPercentual.toLocaleString('pt-BR',{minimumFractionDigits:1}),
+        m.excedente.toLocaleString('pt-BR',{minimumFractionDigits:2})].join(';')).join('\n')
+    + '\n…';
+
+  // Alerta
+  document.getElementById('t-email').innerHTML = `<tbody>
+    <tr><td style="width:150px">Para</td><td style="text-align:left"><code>${u.rotulo}</code></td></tr>
+    <tr><td>Assunto</td><td style="text-align:left"><code>${d.email.assunto}</code></td></tr>
+    <tr><td>Frequência</td><td style="text-align:left">Semanal, após a ingestão da ANP (Supabase Cron)</td></tr>
+    <tr><td>Descadastro</td><td style="text-align:left">link presente — o template <strong>recusa</strong> gerar corpo sem ele</td></tr>
+  </tbody>`;
+  document.getElementById('previa-email').srcdoc = d.email.html;
+}
+
+/* ---------- importação ---------- */
+const CASOS = {
+  ok: {
+    csv: 'data;uf;municipio;litros;valor total;produto\n'
+       + '06/07/2026;SP;Campinas;1200,000;7440,00;DIESEL S10\n'
+       + '13/07/2026;SP;Campinas;850,500;5321,63;DIESEL S10\n'
+       + '20/07/2026;SP;Campinas;1310,000;8234,10;DIESEL S10',
+    html: `<div class="faixa f-bom"><div><strong>Arquivo aceito.</strong> 3 de 3 linhas aceitas.</div></div>
+      <p class="nota">Amostra do que seria gravado:</p>
+      <div class="rolagem"><table>
+        <thead><tr><th>Data</th><th>UF</th><th>Município</th><th>Litros</th><th>Valor total</th><th>R$/L</th></tr></thead>
+        <tbody>
+          <tr><td>06/07/2026</td><td>SP</td><td>Campinas</td><td>1.200,000</td><td>7.440,00</td><td>6,200</td></tr>
+          <tr><td>13/07/2026</td><td>SP</td><td>Campinas</td><td>850,500</td><td>5.321,63</td><td>6,257</td></tr>
+          <tr><td>20/07/2026</td><td>SP</td><td>Campinas</td><td>1.310,000</td><td>8.234,10</td><td>6,286</td></tr>
+        </tbody></table></div>`,
+  },
+  pessoal: {
+    csv: 'data;uf;municipio;litros;valor total;placa;nome do motorista;cpf\n'
+       + '06/07/2026;SP;Campinas;1200,000;7440,00;ABC1D23;João da Silva;123.456.789-00\n'
+       + '13/07/2026;SP;Campinas;850,500;5321,63;XYZ9K88;Maria Souza;987.654.321-00',
+    html: `<div class="faixa f-alerta"><div><strong>Arquivo recusado.</strong>
+        Contém coluna com dado pessoal — "placa", "nome do motorista", "cpf".
+        Este produto aceita somente DATA, UF, MUNICIPIO, LITROS, VALOR TOTAL, PRODUTO.
+        Remova a(s) coluna(s) e reenvie. Nenhum valor dessas colunas foi lido ou armazenado.</div></div>
+      <p class="nota"><strong>Colunas recusadas</strong> — guardamos só o nome, para a mensagem e a
+      auditoria. Nenhum valor dessas colunas foi lido:</p>
+      <ul class="listinha"><li><code>placa</code></li><li><code>nome do motorista</code></li><li><code>cpf</code></li></ul>`,
+  },
+};
+
+function renderImport(caso) {
+  document.getElementById('csv-import').textContent = CASOS[caso].csv;
+  document.getElementById('resultado-import').innerHTML =
+    '<h2>Resultado da validação</h2>' + CASOS[caso].html;
+  document.querySelectorAll('#abas-import button').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.caso === caso)));
+}
+
+/* ---------- navegação ---------- */
+const rail = document.getElementById('rail');
+TELAS.forEach(([id, rotulo]) => {
+  rail.appendChild(el(`<button type="button" data-ir="${id}" aria-current="false">${rotulo}</button>`));
+});
+
+function irPara(id, rolar) {
+  if (!TELAS.some(([t]) => t === id)) id = TELAS[0][0];
+  document.querySelectorAll('nav.rail button').forEach(x =>
+    x.setAttribute('aria-current', String(x.dataset.ir === id)));
+  document.querySelectorAll('.tela').forEach(s => s.classList.toggle('ativa', s.dataset.tela === id));
+  if (rolar) window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+rail.addEventListener('click', (ev) => {
+  const b = ev.target.closest('button[data-ir]');
+  if (!b) return;
+  // Hash na URL: cada tela vira link, e o botão voltar do navegador funciona.
+  location.hash = b.dataset.ir;
+});
+window.addEventListener('hashchange', () => irPara(location.hash.slice(1), true));
+
+const troca = document.getElementById('troca-org');
+DADOS.forEach((d, i) => troca.appendChild(el(`<option value="${i}">${d.usuario.organizacao}</option>`)));
+troca.addEventListener('change', () => { iOrg = Number(troca.value); render(); });
+
+document.getElementById('abas-import').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button[data-caso]');
+  if (b) renderImport(b.dataset.caso);
+});
+
+render();
+renderImport('ok');
+irPara(location.hash.slice(1) || TELAS[0][0], false);
+</script>
