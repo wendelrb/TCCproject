@@ -9,9 +9,27 @@ do arquivo.
 ## Estado atual
 
 **Nenhuma fonte externa foi coletada até aqui.** Este arquivo está deliberadamente sem
-entradas: a Tarefa 1 é apenas schema e multi-tenancy, sem ingestão. As entradas serão
-criadas na Tarefa 2 (ANP) e na Tarefa 3 (PTAX), a partir de downloads reais — nunca
-preenchidas de memória.
+entradas. As entradas serão criadas a partir de downloads reais — nunca preenchidas de
+memória.
+
+## Tentativas de coleta
+
+### 2026-08-14 — ANP: BLOQUEADA pela política de egresso
+
+Tentativa de iniciar a Tarefa 2. O host da ANP é **inalcançável a partir deste
+ambiente** — não é instabilidade da fonte, é negação de política da rede.
+
+- `curl https://www.gov.br/anp/pt-br` → `curl: (56) CONNECT tunnel failed, response 403`
+- Ferramenta de fetch do harness → `EGRESS_BLOCKED: Access to www.gov.br is blocked by
+  the network egress proxy`
+- Diagnóstico do próprio proxy (`$HTTPS_PROXY/__agentproxy/status`):
+  `{"kind":"connect_rejected","detail":"gateway answered 403 to CONNECT (policy denial
+  or upstream failure)","host":"www.gov.br:443"}`
+
+**Nada foi ingerido e nenhum dado foi fabricado para contornar.** A ingestão da ANP fica
+parada até que `www.gov.br` (e o host que sirva os arquivos de dados abertos da ANP)
+seja liberado na política de egresso do ambiente, ou até que os arquivos cheguem por
+outro caminho autorizado.
 
 ---
 
