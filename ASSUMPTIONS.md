@@ -219,3 +219,32 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
 - **Risco residual assumido pelo dono:** o placar de acurácia aparece na demo (opção
   escolhida entre omitir e marcar). Marca d'água mitiga, não elimina, a chance de um
   print virar slide sem contexto.
+
+## A-020 — O intervalo P10–P90 pode não conter o ponto previsto
+
+- **Status:** DECIDIDA
+- **Dúvida:** a constraint original exigia `p10 <= valor_previsto <= p90`. O backtest
+  do motor violou isso em 14 de 422 previsões, todas do modelo `drift`.
+- **Investigação:** não era bug de cálculo. O intervalo vem dos **quantis empíricos
+  dos resíduos** walk-forward (SPEC §5). Quando o modelo vinha errando sistematicamente
+  para o mesmo lado, os resíduos são todos do mesmo sinal e o intervalo desloca.
+- **Decisão:** manter o cálculo fiel à SPEC e **relaxar a constraint** para `p10 <= p90`
+  (migration `20260814120006`). Ponto fora do próprio intervalo é **sinal de viés do
+  modelo**, e este produto promete não esconder isso.
+- **Alternativa descartada:** corrigir o ponto pelo resíduo mediano para forçá-lo para
+  dentro do intervalo. Deixaria o gráfico mais bonito mudando o modelo definido na SPEC
+  — exatamente o "ajustar até vencer" que o CLAUDE.md proíbe.
+- **Pendência de produto:** decidir como a tela comunica esse caso ao cliente. Hoje ela
+  apenas desenha; não rotula o viés.
+
+## A-021 — Seleção de modelo é online, não global
+
+- **Status:** DECIDIDA
+- **Dúvida:** escolher entre naive/drift/mm3 "por walk-forward por UF" admite duas
+  leituras: escolher um vencedor olhando a série toda, ou reescolher a cada origem.
+- **Decisão:** **reescolher a cada origem**, usando só erros cujo ALVO já se realizou
+  até aquela origem. Vale igual para os resíduos que formam o intervalo.
+- **Alternativa descartada:** escolher o melhor modelo na série inteira e depois
+  "avaliar" nela — é vazamento, e produz acurácia que evapora em produção. O teste de
+  não-vazamento em `tests/previsao.test.ts` existe para travar isso: ele muta o futuro
+  da série e exige que nenhuma previsão anterior mude.

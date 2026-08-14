@@ -7,6 +7,8 @@ const ITENS = [
   { href: '/', rotulo: 'Preço e benchmark' },
   { href: '/previsao', rotulo: 'Previsão 1–4 semanas' },
   { href: '/placar', rotulo: 'Placar de acurácia' },
+  { href: '/relatorio', rotulo: 'Relatório mensal' },
+  { href: '/alerta', rotulo: 'Alerta semanal' },
   { href: '/importar', rotulo: 'Importar abastecimentos' },
 ] as const;
 

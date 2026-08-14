@@ -200,69 +200,6 @@ async function semearCompras(pool: pg.Pool, precos: Map<string, number>): Promis
   }
 }
 
-/**
- * Previsões da demo. Grava DOIS modelos por semana — o "escolhido" e o naive —
- * porque o placar do produto compara os dois lado a lado.
- */
-async function semearPrevisoes(pool: pg.Pool, precos: Map<string, number>): Promise<void> {
-  const aleatorio = rng(99);
-  const SEMANAS_DE_RUN = 16;
-
-  for (let s = SEMANAS_DE_RUN; s >= 1; s -= 1) {
-    const semanaOrigem = somarDias(ULTIMA_SEMANA, -7 * s);
-
-    for (const modelo of ['mm3-demo-v1', 'naive-v1'] as const) {
-      const run = await pool.query<{ id: string }>(
-        `insert into public.forecast_runs
-           (modelo_versao, dados_ate, semana_origem, observacao)
-         values ($1, $2, $3, 'EXECUÇÃO FICTÍCIA DA DEMO') returning id`,
-        [modelo, somarDias(semanaOrigem, 6), semanaOrigem],
-      );
-      const runId = run.rows[0]?.id;
-
-      for (const r of REGIOES) {
-        const atual = precos.get(`${r.uf}|${semanaOrigem}`);
-        const anterior = precos.get(`${r.uf}|${somarDias(semanaOrigem, -7)}`);
-        if (atual === undefined) continue;
-
-        for (let h = 1; h <= 4; h += 1) {
-          const semanaAlvo = somarDias(semanaOrigem, 7 * h);
-
-          // naive = último valor observado. O outro modelo põe um pouco de
-          // deriva por cima. Ambos FICTÍCIOS.
-          const deriva = anterior === undefined ? 0 : (atual - anterior) * 0.55;
-          const previsto =
-            modelo === 'naive-v1' ? atual : atual + deriva * h + (aleatorio() - 0.5) * 0.02;
-
-          const largura = 0.055 * Math.sqrt(h) + 0.02;
-          const delta = previsto - atual;
-          const classe = Math.abs(delta) < 0.02 ? 'ESTAVEL' : delta > 0 ? 'ALTA' : 'QUEDA';
-
-          const f = await pool.query<{ id: string }>(
-            `insert into public.forecasts
-               (run_id, uf, horizonte_semanas, semana_alvo, valor_previsto, p10, p90,
-                classe, modelo_versao, oficial)
-             values ($1,$2,$3,$4,$5,$6,$7,$8,$9,true) returning id`,
-            [runId, r.uf, h, semanaAlvo, previsto.toFixed(4),
-             (previsto - largura).toFixed(4), (previsto + largura).toFixed(4),
-             classe, modelo],
-          );
-
-          const realizado = precos.get(`${r.uf}|${semanaAlvo}`);
-          if (realizado !== undefined) {
-            await pool.query(
-              `insert into public.forecast_outcomes
-                 (forecast_id, semana_alvo, valor_realizado, fonte_realizado)
-               values ($1,$2,$3,'DEMO-FICTICIO')`,
-              [f.rows[0]?.id, semanaAlvo, realizado],
-            );
-          }
-        }
-      }
-    }
-  }
-}
-
 async function main(): Promise<void> {
   try {
     travas();
@@ -297,13 +234,9 @@ async function main(): Promise<void> {
     const compras = await pool.query<{ n: string }>('select count(*)::text n from public.fuel_purchases');
     console.log(`fuel_purchases: ${compras.rows[0]?.n}`);
 
-    await semearPrevisoes(pool, precos);
-    const prev = await pool.query<{ n: string; o: string }>(
-      `select (select count(*) from public.forecasts)::text n,
-              (select count(*) from public.forecast_outcomes)::text o`,
-    );
-    console.log(`forecasts: ${prev.rows[0]?.n} | outcomes: ${prev.rows[0]?.o}`);
-    console.log('\nPronto. TODO número deste banco é fictício.');
+    console.log('\nSérie e compras prontas. TODO número deste banco é fictício.');
+    console.log('As PREVISÕES não são semeadas: elas saem do motor real. Rode agora:');
+    console.log('  node scripts/backtest.ts --gravar');
   } finally {
     await pool.end();
   }

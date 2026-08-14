@@ -138,7 +138,56 @@ export async function benchmark(u: UsuarioDemo): Promise<Benchmark | null> {
   });
 }
 
-export async function previsoes(u: UsuarioDemo, modelo = 'mm3-demo-v1'): Promise<Previsao[]> {
+/** Nome do modelo gravado por scripts/backtest.ts. */
+export const MODELO_ATUAL = 'wf-selecao-v1';
+
+export interface MesRelatorio {
+  readonly mes: string;
+  readonly compras: number;
+  readonly litros: number;
+  readonly valorTotal: number;
+  readonly precoPago: number;
+  readonly precoRegiao: number;
+  readonly diferencaPercentual: number;
+  readonly excedente: number;
+}
+
+export async function relatorioMensal(u: UsuarioDemo): Promise<MesRelatorio[]> {
+  return comoUsuario(u.id, async (c) => {
+    const { rows } = await c.query<{
+      mes: string; compras: string; litros: string; valor: string; pago: string; regiao: string;
+    }>(
+      `select to_char(date_trunc('month', p.data),'YYYY-MM') mes,
+              count(*)::text compras,
+              sum(p.litros)::text litros,
+              sum(p.valor_total)::text valor,
+              (sum(p.valor_total)/sum(p.litros))::text pago,
+              (sum(f.preco_medio_revenda*p.litros)/sum(p.litros))::text regiao
+         from public.fuel_purchases p
+         join public.fuel_prices f
+           on f.nivel='UF' and f.uf=p.uf and f.produto=p.produto
+          and p.data between f.semana_inicio and f.semana_fim
+        group by 1 order by 1 desc`,
+    );
+    return rows.map((r) => {
+      const pago = Number(r.pago);
+      const regiao = Number(r.regiao);
+      const litros = Number(r.litros);
+      return {
+        mes: r.mes,
+        compras: Number(r.compras),
+        litros,
+        valorTotal: Number(r.valor),
+        precoPago: pago,
+        precoRegiao: regiao,
+        diferencaPercentual: ((pago - regiao) / regiao) * 100,
+        excedente: (pago - regiao) * litros,
+      };
+    });
+  });
+}
+
+export async function previsoes(u: UsuarioDemo, modelo = MODELO_ATUAL): Promise<Previsao[]> {
   return comoUsuario(u.id, async (c) => {
     const { rows } = await c.query<{
       horizonte_semanas: number; semana_alvo: string; valor: string;
