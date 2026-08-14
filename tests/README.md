@@ -51,3 +51,19 @@ sed -i "s|for select to authenticated using (public.eh_membro(organization_id));
 npm test        # esperado: 5 falhas, todas no bloco de isolamento de leitura
 git checkout -- supabase/migrations/20260814120005_abastecimentos.sql
 ```
+
+## Demo navegável (dados FICTÍCIOS)
+
+Autorizada pela emenda de 2026-08-14 no `CLAUDE.md`. Ver `ASSUMPTIONS.md` A-019.
+
+```bash
+./scripts/pg-local.sh
+PERMITIR_SEED_DEMO=1 node scripts/seed-demo.ts   # sem a variável, recusa rodar
+npx next build --no-lint && npx next start -p 3000
+```
+
+Rotas: `/` preço e benchmark · `/previsao` · `/placar` · `/importar`
+(`?validar=pessoal` e `?validar=conforme` deixam os dois desfechos endereçáveis).
+
+A troca de organização no topo muda o `auth.uid()` e a RLS de produção filtra de
+verdade — não é mock. Nenhum número dessas telas é métrica do produto.

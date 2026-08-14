@@ -10,6 +10,23 @@ vence até que seja explicitamente alterado pelo dono do produto.
 
 - **Nunca gere dados sintéticos, de exemplo ou "aproximados" para preencher tabela.**
   Se uma fonte falhar, **PARE e reporte o erro**. Não contorne.
+
+  > **EMENDA 2026-08-14, autorizada pelo dono do produto — exceção de DEMONSTRAÇÃO.**
+  >
+  > Fica permitido gerar dados fictícios **exclusivamente** para a demo navegável,
+  > sob todas as condições abaixo, simultaneamente:
+  >
+  > 1. Vivem em banco **separado** (`tcc_demo`). O seed **aborta** se a string de
+  >    conexão apontar para `supabase.co`/`supabase.in`, e exige `PERMITIR_SEED_DEMO=1`.
+  > 2. **Toda** tela carrega marcação visível de dado fictício.
+  > 3. Números de acurácia aparecem marcados como **FICTÍCIOS**, jamais como
+  >    resultado de backtest.
+  > 4. Nenhum número da demo pode ser citado como métrica do produto — em relatório,
+  >    commit, PR ou conversa.
+  >
+  > A exceção **não** vale para a série da ANP em produção, para o backtest da
+  > Tarefa 4 nem para qualquer número que saia desta demo. Fora daqui, a regra
+  > acima continua absoluta.
 - Toda fonte externa precisa de registro em `DATA_PROVENANCE.md`: URL, licença,
   data de coleta, período coberto, unidade, hash do arquivo.
 - **Nenhuma feature usada para prever `t+h` pode usar informação publicada depois de `t`.**

@@ -1,31 +1,49 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "preserve",
     "strict": true,
     "noImplicitAny": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
     "noEmit": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "esModuleInterop": true
   },
   "include": [
     "tests/**/*.ts",
-    "app/**/*.ts",
     "scripts/**/*.ts",
-    "supabase/functions/_shared/**/*.ts"
+    "supabase/functions/_shared/**/*.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
   ],
-  "//": "Os entries das Edge Functions rodam em Deno (globais Deno.*, specifiers npm:) e são verificados por `npm run check:deno`, não pelo tsc."
+  "exclude": [
+    "node_modules",
+    "supabase/functions/node_modules"
+  ],
+  "//": "Os entries das Edge Functions rodam em Deno e são verificados por `npm run check:deno`, não pelo tsc."
 }

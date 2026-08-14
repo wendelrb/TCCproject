@@ -203,3 +203,19 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   vazia. O casamento e a unicidade seguem por `municipio_norm`, como A-008 já definia.
 - **Alternativa descartada:** bloquear a ingestão até haver IBGE — a fonte do IBGE está
   atrás do mesmo bloqueio de rede, e travaria a série inteira por um enriquecimento.
+
+## A-019 — Demo navegável com dados fictícios (emenda ao CLAUDE.md)
+
+- **Status:** DECIDIDA pelo dono do produto em 2026-08-14
+- **Dúvida:** o dono pediu para "simular" o sistema. `/CLAUDE.md` proíbe dado sintético
+  em tabela, e ele próprio determina que só o dono pode alterá-lo. Instrução pontual não
+  bastava: precisava ser emenda consciente.
+- **Decisão:** emenda de escopo estreito escrita no próprio `CLAUDE.md`, permitindo dado
+  fictício **só** na demo, com quatro condições cumulativas — banco separado com trava
+  contra Supabase real, marcação visível em toda tela, placar rotulado FICTÍCIO, e
+  proibição de citar qualquer número da demo como métrica.
+- **Alternativa descartada:** popular o schema de produção com dado de exemplo e
+  "lembrar de limpar depois" — é assim que número falso vira citação real.
+- **Risco residual assumido pelo dono:** o placar de acurácia aparece na demo (opção
+  escolhida entre omitir e marcar). Marca d'água mitiga, não elimina, a chance de um
+  print virar slide sem contexto.
