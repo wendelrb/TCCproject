@@ -21,12 +21,12 @@ export function TrocaUsuario({
         <Select
           value={valor}
           onChange={setValor}
-          style={{ minWidth: 260 }}
+          size="small" style={{ minWidth: 210 }}
           options={usuarios.map((u) => ({ value: u.id, label: `${u.organizacao} — ${u.rotulo}` }))}
         />
         <input type="hidden" name="usuario" value={valor} />
-        <Button htmlType="submit" type="primary">
-          Entrar
+        <Button htmlType="submit" size="small">
+          Trocar
         </Button>
       </Space.Compact>
     </form>

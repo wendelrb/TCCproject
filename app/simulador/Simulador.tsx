@@ -10,8 +10,8 @@ import {
 import type { PontoSerie } from '../lib/consultas.ts';
 
 const CAMINHOS = 600;
-const COR_1 = '#2a78d6';
-const COR_2 = '#eb6834';
+const COR_1 = 'var(--ambar-claro)';
+const COR_2 = 'var(--azul)';
 
 function brl(v: number, casas = 2): string {
   return v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
@@ -79,7 +79,7 @@ export function Simulador({
           <div>
             <div className="rotulo-campo">Custo de capital (% ao ano)</div>
             <Slider min={0} max={30} step={0.5} value={juros} onChange={setJuros} />
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
+            <p style={{ fontSize: 12, color: 'var(--ink-2)', margin: 0 }}>
               Dinheiro parado em tanque tem custo. Zerar isso faz antecipar parecer melhor do que é.
             </p>
           </div>
@@ -103,7 +103,7 @@ export function Simulador({
         title={`Retrospectivo — o que cada estratégia teria custado em ${uf}, últimas ${janela} semanas`}
         style={{ marginBottom: 16 }}
       >
-        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 0 }}>
           Aqui não há previsão envolvida: é a série que já aconteceu. É a evidência mais difícil de
           contestar, porque não depende de o modelo acertar.
         </p>
@@ -138,12 +138,12 @@ export function Simulador({
                         <strong>{brl(e.custoTotal)}</strong>
                       </td>
                       <td>{brl(e.precoMedioEfetivo, 3)}</td>
-                      <td style={{ color: dif > 0 ? COR_1 : dif < 0 ? COR_2 : 'var(--text-secondary)', fontWeight: 600 }}>
+                      <td style={{ color: dif > 0 ? COR_1 : dif < 0 ? COR_2 : 'var(--ink-2)', fontWeight: 600 }}>
                         {dif === 0 ? '—' : `${dif > 0 ? '+' : '−'}${brl(Math.abs(dif))}`}
                       </td>
                     </>
                   ) : (
-                    <td colSpan={6} style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>
+                    <td colSpan={6} style={{ textAlign: 'left', color: 'var(--ink-2)' }}>
                       inviável: {e.motivoInviavel}
                     </td>
                   )}
@@ -164,7 +164,7 @@ export function Simulador({
           />
         ) : (
           <>
-            <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 0 }}>
+            <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 0 }}>
               {CAMINHOS} caminhos de preço, cada passo sorteando um resíduo real do backtest
               ({residuos.length} disponíveis). Usar os resíduos observados, em vez de uma normal,
               preserva as caudas — e em combustível o choque de alta é mais violento que o passeio de baixa.
@@ -226,12 +226,12 @@ export function Simulador({
                             <strong>{brl(d.p50)}</strong>
                           </td>
                           <td>{brl(d.p90)}</td>
-                          <td style={{ color: dif > 0 ? COR_1 : dif < 0 ? COR_2 : 'var(--text-secondary)', fontWeight: 600 }}>
+                          <td style={{ color: dif > 0 ? COR_1 : dif < 0 ? COR_2 : 'var(--ink-2)', fontWeight: 600 }}>
                             {dif === 0 ? '—' : `${dif > 0 ? '+' : '−'}${brl(Math.abs(dif))}`}
                           </td>
                         </>
                       ) : (
-                        <td colSpan={4} style={{ textAlign: 'left', color: 'var(--text-secondary)' }}>
+                        <td colSpan={4} style={{ textAlign: 'left', color: 'var(--ink-2)' }}>
                           não cabe no tanque
                         </td>
                       )}
@@ -303,15 +303,15 @@ function FaixaCenarios({
           const v = y0 + f * (y1 - y0);
           return (
             <g key={f}>
-              <line x1={M.e} x2={L - M.r} y1={Y(v)} y2={Y(v)} stroke="var(--grid)" />
-              <text x={M.e - 8} y={Y(v) + 4} textAnchor="end" fontSize={11} fill="var(--text-muted)">
+              <line x1={M.e} x2={L - M.r} y1={Y(v)} y2={Y(v)} stroke="var(--hairline)" />
+              <text x={M.e - 8} y={Y(v) + 4} textAnchor="end" fontSize={11} fill="var(--ink-3)">
                 {v.toFixed(2)}
               </text>
             </g>
           );
         })}
         {Array.from({ length: h + 1 }, (_, i) => (
-          <text key={i} x={X(i)} y={A - 8} textAnchor="middle" fontSize={10} fill="var(--text-muted)">
+          <text key={i} x={X(i)} y={A - 8} textAnchor="middle" fontSize={10} fill="var(--ink-3)">
             {i === 0 ? 'hoje' : `+${i}`}
           </text>
         ))}

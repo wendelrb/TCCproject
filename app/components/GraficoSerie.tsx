@@ -27,8 +27,8 @@ export interface PontoPrevisao {
   readonly p90: number;
 }
 
-const COR_HIST = '#2a78d6';
-const COR_PREV = '#eb6834';
+const COR_HIST = 'var(--ambar)';
+const COR_PREV = 'var(--azul)';
 
 const M = { topo: 16, direita: 74, baixo: 30, esquerda: 52 };
 
@@ -127,8 +127,8 @@ export function GraficoSerie({
       >
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={M.esquerda} x2={largura - M.direita} y1={y(t)} y2={y(t)} stroke="var(--grid)" strokeWidth={1} />
-            <text x={M.esquerda - 8} y={y(t) + 4} textAnchor="end" fontSize={11} fill="var(--text-muted)">
+            <line x1={M.esquerda} x2={largura - M.direita} y1={y(t)} y2={y(t)} stroke="var(--hairline)" strokeWidth={1} />
+            <text x={M.esquerda - 8} y={y(t) + 4} textAnchor="end" fontSize={11} fill="var(--ink-3)">
               {t.toFixed(2)}
             </text>
           </g>
@@ -136,7 +136,7 @@ export function GraficoSerie({
 
         {todos.map((p, i) =>
           i % passoRotulo === 0 ? (
-            <text key={p.semana + i} x={x(i)} y={altura - 10} textAnchor="middle" fontSize={10} fill="var(--text-muted)">
+            <text key={p.semana + i} x={x(i)} y={altura - 10} textAnchor="middle" fontSize={10} fill="var(--ink-3)">
               {formatarData(p.semana)}
             </text>
           ) : null,
@@ -154,7 +154,7 @@ export function GraficoSerie({
           y={y(historico[iCorte]?.valor ?? 0) - 8}
           fontSize={11}
           fontWeight={600}
-          fill="var(--text-secondary)"
+          fill="var(--ink-2)"
         >
           {previsao.length > 0 ? 'hoje' : `R$ ${formatarBRL(historico[iCorte]?.valor ?? 0)}`}
         </text>
@@ -177,7 +177,7 @@ export function GraficoSerie({
               x2={x(ativo)}
               y1={M.topo}
               y2={M.topo + alturaPlot}
-              stroke="var(--text-muted)"
+              stroke="var(--ink-3)"
               strokeWidth={1}
               strokeDasharray="3 3"
             />
@@ -186,7 +186,7 @@ export function GraficoSerie({
               cy={y(pontoAtivo.valor)}
               r={5}
               fill={pontoAtivo.tipo === 'hist' ? COR_HIST : COR_PREV}
-              stroke="var(--surface-1)"
+              stroke="var(--surface)"
               strokeWidth={2}
             />
           </g>
@@ -211,8 +211,8 @@ export function GraficoSerie({
             position: 'absolute',
             top: 8,
             right: 8,
-            background: 'var(--surface-1)',
-            border: '1px solid var(--grid)',
+            background: 'var(--elev)',
+            border: '1px solid var(--hairline-forte)',
             borderRadius: 6,
             padding: '8px 12px',
             fontSize: 12,
@@ -225,7 +225,7 @@ export function GraficoSerie({
           {pontoAtivo.tipo === 'prev' && (
             <>
               <br />
-              <span style={{ color: 'var(--text-secondary)' }}>
+              <span style={{ color: 'var(--ink-2)' }}>
                 P10–P90: {formatarBRL(pontoAtivo.p10)}–{formatarBRL(pontoAtivo.p90)}
               </span>
             </>

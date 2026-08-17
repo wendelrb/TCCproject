@@ -1,6 +1,5 @@
 import { Alert } from 'antd';
 
-import { Nav } from '../components/Nav.tsx';
 import { Simulador } from './Simulador.tsx';
 import { usuarioAtual } from '../lib/demo.ts';
 import { historicoUf, precoAtual, residuosH1 } from '../lib/consultas.ts';
@@ -17,7 +16,10 @@ export default async function Pagina() {
 
   return (
     <>
-      <Nav />
+      <div className="cabeca">
+        <h1>Compro agora ou espero?</h1>
+        <p>Em reais, sobre o seu volume — não em R$/L abstrato.</p>
+      </div>
 
       <Alert
         type="info"

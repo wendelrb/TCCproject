@@ -41,9 +41,9 @@ export function Formulario({
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
               fontSize: 12,
               padding: 10,
-              border: '1px solid var(--grid)',
+              border: '1px solid var(--hairline)',
               borderRadius: 6,
-              background: 'var(--surface-1)',
+              background: 'var(--surface)',
             }}
           />
           <div style={{ marginTop: 10 }}>

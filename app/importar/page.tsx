@@ -1,6 +1,5 @@
 import { Alert } from 'antd';
 
-import { Nav } from '../components/Nav.tsx';
 import { Formulario } from './Formulario.tsx';
 import { CONFORME, COM_DADO_PESSOAL } from './exemplos.ts';
 import { validarArquivo } from './acoes.ts';
@@ -30,7 +29,10 @@ export default async function Pagina({
 
   return (
     <>
-      <Nav />
+      <div className="cabeca">
+        <h1>Importar abastecimentos</h1>
+        <p>Seis colunas, e só elas: data, UF, município, litros, valor total, produto.</p>
+      </div>
 
       <Alert
         type="info"

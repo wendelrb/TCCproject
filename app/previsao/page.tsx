@@ -1,6 +1,5 @@
 import { Card, Tag, Alert } from 'antd';
 
-import { Nav } from '../components/Nav.tsx';
 import { GraficoSerie } from '../components/GraficoSerie.tsx';
 import { usuarioAtual } from '../lib/demo.ts';
 import { historicoUf, previsoes } from '../lib/consultas.ts';
@@ -20,7 +19,10 @@ export default async function Pagina() {
 
   return (
     <>
-      <Nav />
+      <div className="cabeca">
+        <h1>Previsão de 1 a 4 semanas</h1>
+        <p>A faixa é o intervalo P10–P90, dos quantis empíricos dos resíduos walk-forward daquela UF.</p>
+      </div>
 
       <Alert
         type="info"

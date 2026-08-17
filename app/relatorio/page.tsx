@@ -1,6 +1,5 @@
 import { Card, Alert, Statistic } from 'antd';
 
-import { Nav } from '../components/Nav.tsx';
 import { usuarioAtual } from '../lib/demo.ts';
 import { relatorioMensal } from '../lib/consultas.ts';
 
@@ -28,7 +27,10 @@ export default async function Pagina() {
 
   return (
     <>
-      <Nav />
+      <div className="cabeca">
+        <h1>Relatório mensal</h1>
+        <p>A média da região é ponderada pelos seus litros, não a média simples das semanas.</p>
+      </div>
 
       <div className="grade">
         <Card size="small">
@@ -41,7 +43,7 @@ export default async function Pagina() {
           <Statistic
             title={totalExcedente >= 0 ? 'Excedente sobre a média da região' : 'Economia sobre a média da região'}
             value={`R$ ${brl(Math.abs(totalExcedente))}`}
-            valueStyle={{ fontSize: 24, color: totalExcedente >= 0 ? 'var(--series-2)' : 'var(--series-1)' }}
+            valueStyle={{ fontSize: 24, color: totalExcedente >= 0 ? 'var(--sobe)' : 'var(--cai)' }}
           />
         </Card>
       </div>
@@ -102,7 +104,7 @@ export default async function Pagina() {
                 <td>{m.precoRegiao.toFixed(3)}</td>
                 <td
                   style={{
-                    color: m.diferencaPercentual > 0 ? 'var(--series-2)' : 'var(--series-1)',
+                    color: m.diferencaPercentual > 0 ? 'var(--sobe)' : 'var(--cai)',
                     fontWeight: 600,
                   }}
                 >

@@ -1,6 +1,5 @@
 import { Card, Alert, Tag } from 'antd';
 
-import { Nav } from '../components/Nav.tsx';
 import { usuarioAtual } from '../lib/demo.ts';
 import { benchmark, placar, precoAtual, previsoes } from '../lib/consultas.ts';
 import { assuntoAlerta, corpoAlerta } from '../../supabase/functions/_shared/email/alertaSemanal.ts';
@@ -37,7 +36,10 @@ export default async function Pagina() {
 
   return (
     <>
-      <Nav />
+      <div className="cabeca">
+        <h1>Alerta semanal</h1>
+        <p>Disparado após a ingestão da ANP, uma vez por semana, por organização.</p>
+      </div>
 
       <Alert
         type="warning"

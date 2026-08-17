@@ -1,6 +1,5 @@
 import { Card, Alert } from 'antd';
 
-import { Nav } from '../components/Nav.tsx';
 import { usuarioAtual } from '../lib/demo.ts';
 import { placar } from '../lib/consultas.ts';
 
@@ -16,7 +15,10 @@ export default async function Pagina() {
 
   return (
     <>
-      <Nav />
+      <div className="cabeca">
+        <h1>Placar de acurácia</h1>
+        <p>O modelo escolhido aparece lado a lado com o naive. Se não estiver batendo o naive, é isso que a tela mostra.</p>
+      </div>
 
       <Alert
         type="error"
@@ -42,7 +44,7 @@ export default async function Pagina() {
         }
         className="marca-dagua"
       >
-        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 0 }}>
+        <p style={{ fontSize: 13, color: 'var(--ink-2)', marginTop: 0 }}>
           O produto mostra o modelo escolhido <em>lado a lado com o naive</em>. Se o modelo
           não estiver batendo o naive, é isso que aparece na tela — a regra do projeto é
           reportar, não esconder.
