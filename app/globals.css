@@ -128,3 +128,10 @@ body {
   border-top: 1px solid var(--grid);
   padding-top: 14px;
 }
+
+.rotulo-campo {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}

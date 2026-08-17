@@ -80,3 +80,14 @@ node -e "const f=require('fs');f.writeFileSync('demo-diesel.html', \
 Gera um HTML único, sem dependência externa. É uma **captura**: não tem banco
 atrás, então a RLS não está sendo exercitada ali. Cada tela é linkável por hash
 (`#previsao`, `#placar`, …).
+
+### Simulador na página estática
+
+O motor de simulação NÃO é reescrito em JS para a página. `scripts/gerar-estatica.ts`
+roda o `tsc` sobre `_shared/simulacao/compra.ts` e injeta o JS resultante — uma
+implementação, dois destinos, sem risco de divergência.
+
+```bash
+node scripts/exportar-demo.ts demo.json
+node scripts/gerar-estatica.ts demo.json demo-diesel.html
+```

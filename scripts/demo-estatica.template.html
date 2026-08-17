@@ -166,6 +166,19 @@
     padding:12px 14px; overflow-x:auto; font-size:12px; line-height:1.6; margin:0;
     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   }
+
+  .campos { display:grid; gap:18px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+  .campo label { display:block; font-size:12px; font-weight:640; color:var(--ink-2); margin-bottom:6px; }
+  .campo input[type="range"] { width:100%; accent-color:var(--accent); }
+  .campo output {
+    font-family:ui-monospace,Menlo,monospace; font-variant-numeric:tabular-nums;
+    font-size:15px; font-weight:640; color:var(--ink);
+  }
+  .campo .ajuda { font-size:11.5px; color:var(--ink-3); margin:4px 0 0; line-height:1.45; }
+  .destaque { background:var(--surface-2); }
+  .ganho { color:var(--accent); font-weight:640; }
+  .perda { color:var(--dado-2); font-weight:640; }
+
   .tela { display:none; }
   .tela.ativa { display:block; animation:entra .18s ease-out; }
   @keyframes entra { from { opacity:0; transform:translateY(3px); } to { opacity:1; transform:none; } }
@@ -233,6 +246,60 @@
         <div class="cartao">
           <h2>Detalhe por horizonte</h2>
           <div class="rolagem"><table id="t-previsao"></table></div>
+        </div>
+      </section>
+
+
+      <!-- SIMULADOR -->
+      <section class="tela" data-tela="simulador">
+        <div class="faixa f-info">
+          <div><strong>Compro agora ou espero?</strong> Em reais, sobre o <em>seu</em> volume — não em
+          R$/L abstrato. Duas leituras: o que cada estratégia <em>teria custado</em> na série que já
+          aconteceu, e a <em>distribuição</em> do custo nas próximas 8 semanas. Nunca um número único
+          sobre o futuro. Mexa nos controles.</div>
+        </div>
+
+        <div class="cartao">
+          <h2>Seus parâmetros</h2>
+          <div class="campos">
+            <div class="campo">
+              <label for="s-consumo">Consumo semanal · <output id="o-consumo"></output> L</label>
+              <input type="range" id="s-consumo" min="200" max="20000" step="100" value="1500">
+            </div>
+            <div class="campo">
+              <label for="s-tanque">Capacidade de tanque · <output id="o-tanque"></output> L</label>
+              <input type="range" id="s-tanque" min="1000" max="120000" step="1000" value="8000">
+            </div>
+            <div class="campo">
+              <label for="s-juros">Custo de capital · <output id="o-juros"></output>% a.a.</label>
+              <input type="range" id="s-juros" min="0" max="30" step="0.5" value="13">
+              <p class="ajuda">Dinheiro parado em tanque tem custo. Zerar isso faz antecipar parecer
+              melhor do que é.</p>
+            </div>
+            <div class="campo">
+              <label for="s-janela">Janela do retrospectivo · <output id="o-janela"></output> semanas</label>
+              <input type="range" id="s-janela" min="13" max="104" step="1" value="26">
+            </div>
+          </div>
+        </div>
+
+        <div class="cartao">
+          <h2>Retrospectivo — o que cada estratégia teria custado</h2>
+          <p class="nota">Sem previsão envolvida: é a série que já aconteceu. É a evidência mais
+          difícil de contestar, porque não depende de o modelo acertar.</p>
+          <div class="rolagem"><table id="t-retro"></table></div>
+        </div>
+
+        <div class="cartao">
+          <h2>Prospectivo — distribuição do custo nas próximas 8 semanas</h2>
+          <p class="nota" id="nota-pros"></p>
+          <div id="veredito-sim"></div>
+          <div class="legenda">
+            <span><i style="background:var(--dado-2);opacity:.4"></i>faixa P10–P90 dos cenários</span>
+            <span><i style="background:var(--dado-2)"></i>mediana</span>
+          </div>
+          <div class="grafico" id="g-cenarios"></div>
+          <div class="rolagem" style="margin-top:14px"><table id="t-pros"></table></div>
         </div>
       </section>
 
@@ -354,11 +421,14 @@
 </div>
 
 <script>
+/*__MOTOR__*/
+
 const DADOS = /*__DADOS__*/;
 
 const TELAS = [
   ['preco', 'Preço e benchmark'],
   ['previsao', 'Previsão 1–4 semanas'],
+  ['simulador', 'Simulador de compra'],
   ['placar', 'Placar de acurácia'],
   ['relatorio', 'Relatório mensal'],
   ['alerta', 'Alerta semanal'],
@@ -587,6 +657,8 @@ function render() {
     <tr><td>Descadastro</td><td style="text-align:left">link presente — o template <strong>recusa</strong> gerar corpo sem ele</td></tr>
   </tbody>`;
   document.getElementById('previa-email').srcdoc = d.email.html;
+
+  renderSimulador();
 }
 
 /* ---------- importação ---------- */
@@ -626,6 +698,143 @@ function renderImport(caso) {
     '<h2>Resultado da validação</h2>' + CASOS[caso].html;
   document.querySelectorAll('#abas-import button').forEach(b =>
     b.setAttribute('aria-pressed', String(b.dataset.caso === caso)));
+}
+
+
+/* ---------- simulador ---------- */
+const ANTECIPACOES = [1, 2, 3, 4, 6, 8];
+const CAMINHOS = 600;
+
+const rotuloEstrategia = (a) => a === 1 ? 'Comprar toda semana' : `Antecipar ${a} semanas`;
+const money = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const dif = (v) => v === 0 ? '—'
+  : `<span class="${v > 0 ? 'ganho' : 'perda'}">${v > 0 ? '+' : '−'}${money(Math.abs(v))}</span>`;
+
+function lerParams() {
+  const val = (id) => Number(document.getElementById(id).value);
+  const consumo = val('s-consumo'), tanque = val('s-tanque'), juros = val('s-juros'), janela = val('s-janela');
+  document.getElementById('o-consumo').textContent = consumo.toLocaleString('pt-BR');
+  document.getElementById('o-tanque').textContent = tanque.toLocaleString('pt-BR');
+  document.getElementById('o-juros').textContent = juros.toLocaleString('pt-BR');
+  document.getElementById('o-janela').textContent = String(janela);
+  return {
+    params: { consumoSemanalLitros: consumo, capacidadeTanqueLitros: tanque, custoCapitalAnual: juros / 100 },
+    janela,
+  };
+}
+
+function desenharCenarios(alvo, caminhos, precoAtual) {
+  if (!caminhos.length) { alvo.innerHTML = ''; return; }
+  const h = caminhos[0].length;
+  const q = (vals, pr) => {
+    const t = [...vals].sort((a, b) => a - b);
+    const pos = (t.length - 1) * pr, b = Math.floor(pos);
+    return t[b] + ((t[Math.ceil(pos)] ?? t[b]) - t[b]) * (pos - b);
+  };
+  const passos = Array.from({ length: h }, (_, i) => caminhos.map((c) => c[i]));
+  const p10 = passos.map((v) => q(v, 0.1)), p50 = passos.map((v) => q(v, 0.5)), p90 = passos.map((v) => q(v, 0.9));
+
+  const L = 820, A = 220, M = { t: 12, r: 18, b: 26, e: 50 };
+  const todos = [precoAtual, ...p10, ...p90];
+  const min = Math.min(...todos), max = Math.max(...todos);
+  const folga = (max - min) * 0.1 || 0.1, y0 = min - folga, y1 = max + folga;
+  const lp = L - M.e - M.r, ap = A - M.t - M.b;
+  const X = (i) => M.e + (i / h) * lp;
+  const Y = (v) => M.t + ap - ((v - y0) / (y1 - y0)) * ap;
+
+  const banda = `M ${X(0)} ${Y(precoAtual)} `
+    + p90.map((v, i) => `L ${X(i + 1).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ') + ' '
+    + p10.map((v, i) => ({ v, i })).reverse().map(({ v, i }) => `L ${X(i + 1).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ')
+    + ` L ${X(0)} ${Y(precoAtual)} Z`;
+  const mediana = `M ${X(0)} ${Y(precoAtual)} ` + p50.map((v, i) => `L ${X(i + 1).toFixed(1)} ${Y(v).toFixed(1)}`).join(' ');
+
+  alvo.innerHTML = `<svg viewBox="0 0 ${L} ${A}" width="100%" role="img"
+      aria-label="Faixa de cenários de preço nas próximas oito semanas">
+    ${[0, 0.5, 1].map((f) => { const v = y0 + f * (y1 - y0); return `
+      <line x1="${M.e}" x2="${L - M.r}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--hairline)"/>
+      <text x="${M.e - 8}" y="${(Y(v) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="var(--ink-3)"
+            font-family="ui-monospace,monospace">${v.toFixed(2)}</text>`; }).join('')}
+    ${Array.from({ length: h + 1 }, (_, i) => `<text x="${X(i).toFixed(1)}" y="${A - 8}" text-anchor="middle"
+        font-size="10" fill="var(--ink-3)" font-family="ui-monospace,monospace">${i === 0 ? 'hoje' : '+' + i}</text>`).join('')}
+    <path d="${banda}" fill="var(--dado-2)" opacity=".18"/>
+    <path d="${mediana}" fill="none" stroke="var(--dado-2)" stroke-width="2"/>
+    <circle cx="${X(0)}" cy="${Y(precoAtual)}" r="4" fill="var(--accent)"/>
+  </svg>`;
+}
+
+function renderSimulador() {
+  const d = DADOS[iOrg];
+  const { params, janela } = lerParams();
+  const precoAtual = d.precoAtual ? d.precoAtual.uf : 0;
+  const residuos = d.residuos || [];
+
+  const precos = d.historico.slice(-janela).map((x) => x.valor);
+  const retro = SIM.compararEstrategias(precos, params, ANTECIPACOES);
+
+  document.getElementById('t-retro').innerHTML = `
+    <thead><tr><th>Estratégia</th><th>Compras</th><th>Combustível (R$)</th><th>Custo de capital (R$)</th>
+    <th>Total (R$)</th><th>R$/L efetivo</th><th>vs comprar toda semana</th></tr></thead>
+    <tbody>${retro.estrategias.map((e) => {
+      const melhor = retro.melhor && retro.melhor.antecipacaoSemanas === e.antecipacaoSemanas;
+      if (!e.viavel) return `<tr><td>${rotuloEstrategia(e.antecipacaoSemanas)}</td>
+        <td colspan="6" style="text-align:left;color:var(--ink-3)">inviável: ${e.motivoInviavel}</td></tr>`;
+      const delta = retro.base.viavel ? retro.base.custoTotal - e.custoTotal : 0;
+      return `<tr class="${melhor ? 'destaque' : ''}">
+        <td>${rotuloEstrategia(e.antecipacaoSemanas)}${melhor ? ' <strong class="ganho">· melhor</strong>' : ''}</td>
+        <td>${e.compras}</td><td>${money(e.custoCombustivel)}</td><td>${money(e.custoCapital)}</td>
+        <td><strong>${money(e.custoTotal)}</strong></td>
+        <td>${e.precoMedioEfetivo.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })}</td>
+        <td>${dif(delta)}</td></tr>`;
+    }).join('')}</tbody>`;
+
+  const notaPros = document.getElementById('nota-pros');
+  const veredito = document.getElementById('veredito-sim');
+  const tPros = document.getElementById('t-pros');
+
+  if (!residuos.length) {
+    notaPros.textContent = 'Sem resíduos de backtest exportados — o cenário prospectivo não pode ser montado.';
+    veredito.innerHTML = ''; tPros.innerHTML = '';
+    desenharCenarios(document.getElementById('g-cenarios'), [], precoAtual);
+    return;
+  }
+
+  notaPros.innerHTML = `${CAMINHOS} caminhos de preço, cada passo sorteando um resíduo real do backtest
+    (${residuos.length} disponíveis). Usar os resíduos observados, em vez de uma normal, preserva as
+    caudas — e em combustível o choque de alta é mais violento que o passeio de baixa.`;
+
+  const pros = SIM.simularProspectivo(precoAtual, residuos, params,
+    { horizonteSemanas: 8, caminhos: CAMINHOS, semente: 20260814 }, ANTECIPACOES);
+
+  veredito.innerHTML = pros.antecipacaoComparada === null
+    ? `<div class="faixa f-atencao"><div><strong>Nenhuma antecipação cabe no seu tanque.</strong>
+        Com ${params.consumoSemanalLitros.toLocaleString('pt-BR')} L por semana e tanque de
+        ${params.capacidadeTanqueLitros.toLocaleString('pt-BR')} L, não sobra espaço para comprar
+        adiantado. A pergunta "vale antecipar?" não tem resposta neste cenário.</div></div>`
+    : `<div class="faixa ${pros.probEsperarCompensa > 0.5 ? 'f-info' : 'f-atencao'}"><div>
+        <strong>${pros.probEsperarCompensa > 0.5
+          ? `Em ${(pros.probEsperarCompensa * 100).toFixed(0)}% dos cenários, comprar toda semana sai mais barato que antecipar ${pros.antecipacaoComparada}.`
+          : `Em ${((1 - pros.probEsperarCompensa) * 100).toFixed(0)}% dos cenários, antecipar ${pros.antecipacaoComparada} semanas sai mais barato que comprar toda semana.`}</strong><br>
+        Comparação contra antecipar ${pros.antecipacaoComparada} semanas, a maior que cabe no seu tanque.
+        Probabilidade não é certeza: a coluna P10–P90 mostra o quanto o resultado varia.</div></div>`;
+
+  desenharCenarios(document.getElementById('g-cenarios'), pros.caminhos, precoAtual);
+
+  const baseP50 = (pros.distribuicoes.find((x) => x.antecipacaoSemanas === 1) || {}).p50;
+  tPros.innerHTML = `
+    <thead><tr><th>Estratégia</th><th>Custo P10 (R$)</th><th>Mediana (R$)</th><th>Custo P90 (R$)</th>
+    <th>Mediana vs semanal</th></tr></thead>
+    <tbody>${pros.distribuicoes.map((x) => {
+      if (!x.viavel) return `<tr><td>${rotuloEstrategia(x.antecipacaoSemanas)}</td>
+        <td colspan="4" style="text-align:left;color:var(--ink-3)">não cabe no tanque</td></tr>`;
+      const delta = Number.isFinite(baseP50) ? baseP50 - x.p50 : 0;
+      return `<tr><td>${rotuloEstrategia(x.antecipacaoSemanas)}</td>
+        <td>${money(x.p10)}</td><td><strong>${money(x.p50)}</strong></td><td>${money(x.p90)}</td>
+        <td>${dif(delta)}</td></tr>`;
+    }).join('')}</tbody>`;
+}
+
+for (const id of ['s-consumo', 's-tanque', 's-juros', 's-janela']) {
+  document.getElementById(id).addEventListener('input', renderSimulador);
 }
 
 /* ---------- navegação ---------- */

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const ITENS = [
   { href: '/', rotulo: 'Preço e benchmark' },
   { href: '/previsao', rotulo: 'Previsão 1–4 semanas' },
+  { href: '/simulador', rotulo: 'Simulador de compra' },
   { href: '/placar', rotulo: 'Placar de acurácia' },
   { href: '/relatorio', rotulo: 'Relatório mensal' },
   { href: '/alerta', rotulo: 'Alerta semanal' },

@@ -248,3 +248,22 @@ export async function placar(u: UsuarioDemo, semanas = 12): Promise<PlacarModelo
     }));
   });
 }
+
+/**
+ * Resíduos (realizado − previsto) do modelo em h=1, para o bootstrap de
+ * cenários do simulador. Só de previsões já realizadas — mesma regra de
+ * não-vazamento do motor.
+ */
+export async function residuosH1(u: UsuarioDemo, modelo = MODELO_ATUAL): Promise<number[]> {
+  return comoUsuario(u.id, async (c) => {
+    const { rows } = await c.query<{ erro: string }>(
+      `select p.erro::text
+         from public.v_forecast_placar p
+        where p.uf = $1 and p.modelo_versao = $2 and p.horizonte_semanas = 1
+          and p.valor_realizado is not null
+        order by p.semana_alvo`,
+      [u.ufBase, modelo],
+    );
+    return rows.map((r) => Number(r.erro)).filter((v) => Number.isFinite(v));
+  });
+}

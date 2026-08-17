@@ -182,7 +182,20 @@ async function main(): Promise<void> {
           };
         });
 
-        return { historico, precoAtual, previsao, placar, benchmark, relatorio };
+        // Resíduos do backtest: é o que alimenta o bootstrap de cenários do
+        // simulador na página estática.
+        const residuos = (
+          await c.query<{ erro: string }>(
+            `select p.erro::text
+               from public.v_forecast_placar p
+              where p.uf=$1 and p.modelo_versao=$2 and p.horizonte_semanas=1
+                and p.valor_realizado is not null
+              order by p.semana_alvo`,
+            [u.uf, MODELO],
+          )
+        ).rows.map((r) => Number(r.erro)).filter((v) => Number.isFinite(v));
+
+        return { historico, precoAtual, previsao, placar, benchmark, relatorio, residuos };
       });
 
       const modeloL = dados.placar.find((l) => l.modelo !== 'naive-v1');
