@@ -16,6 +16,7 @@
 
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -23,12 +24,17 @@ const RAIZ = path.resolve(import.meta.dirname, '..');
 const MOTOR_TS = path.join(RAIZ, 'supabase/functions/_shared/simulacao/compra.ts');
 const TEMPLATE = path.join(RAIZ, 'scripts/demo-estatica.template.html');
 
+// Roda o compilador pelo arquivo JS dele, com o próprio Node, em vez de chamar
+// `npx tsc`. No Windows o executável é `npx.cmd`, e `execFileSync` sem shell não
+// resolve a extensão — daria ENOENT. Assim o caminho é o mesmo nos três sistemas.
+const TSC_JS = createRequire(import.meta.url).resolve('typescript/lib/tsc.js');
+
 /** Compila o motor e devolve o JS pronto para inline num <script> comum. */
 function motorCompilado(): string {
   const saida = mkdtempSync(path.join(tmpdir(), 'motor-'));
   execFileSync(
-    'npx',
-    ['tsc', MOTOR_TS, '--target', 'es2022', '--module', 'esnext',
+    process.execPath,
+    [TSC_JS, MOTOR_TS, '--target', 'es2022', '--module', 'esnext',
      '--moduleResolution', 'bundler', '--strict', '--outDir', saida],
     { stdio: 'inherit' },
   );
