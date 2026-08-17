@@ -1,5 +1,7 @@
 import pg from 'pg';
 
+import { urlDemo } from './pgurl.ts';
+
 /**
  * Acesso ao banco da DEMO.
  *
@@ -9,11 +11,7 @@ import pg from 'pg';
  * das migrations de produção. O que é falso aqui é o dado, não o mecanismo.
  */
 
-const pool = new pg.Pool({
-  connectionString:
-    process.env.DATABASE_URL ?? 'postgres://postgres@127.0.0.1:55432/tcc_demo',
-  max: 6,
-});
+const pool = new pg.Pool({ connectionString: urlDemo(), max: 6 });
 
 export async function comoUsuario<T>(
   userId: string,

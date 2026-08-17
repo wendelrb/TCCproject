@@ -8,6 +8,8 @@
 import { writeFile } from 'node:fs/promises';
 import pg from 'pg';
 
+import { urlDemo } from '../app/lib/pgurl.ts';
+
 import { corpoAlerta, assuntoAlerta } from '../supabase/functions/_shared/email/alertaSemanal.ts';
 
 const USUARIOS = [
@@ -50,7 +52,7 @@ const n = (v: string | null): number | null => (v === null ? null : Number(v));
 
 async function main(): Promise<void> {
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL ?? 'postgres://postgres@127.0.0.1:55432/tcc_demo',
+    connectionString: urlDemo(),
   });
 
   const saida: Record<string, unknown>[] = [];

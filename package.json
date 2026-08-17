@@ -6,6 +6,12 @@
     "node": ">=22.18"
   },
   "scripts": {
+    "dev": "next dev",
+    "build": "next build --no-lint",
+    "start": "next start",
+    "demo:dados": "node scripts/preparar-demo.ts",
+    "demo": "node scripts/preparar-demo.ts && next dev",
+    "demo:estatica": "node scripts/exportar-demo.ts demo.json && node scripts/gerar-estatica.ts demo.json demo-diesel.html",
     "test": "node --test tests/*.test.ts",
     "test:rls": "node --test tests/rls.test.ts",
     "typecheck": "tsc --noEmit",

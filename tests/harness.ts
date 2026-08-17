@@ -15,12 +15,45 @@ const RAIZ = path.resolve(AQUI, '..');
 const DIR_MIGRATIONS = path.join(RAIZ, 'supabase', 'migrations');
 const DIR_SQL_TESTE = path.join(AQUI, 'sql');
 
-export const CONEXAO = {
-  host: process.env.PGHOST ?? '127.0.0.1',
-  port: Number(process.env.PGPORT ?? 55432),
-  user: process.env.PGUSER ?? 'postgres',
-  password: process.env.PGPASSWORD ?? '',
-} as const;
+export interface Conexao {
+  readonly host: string;
+  readonly port: number;
+  readonly user: string;
+  readonly password: string;
+}
+
+/**
+ * Conexão ao Postgres.
+ *
+ * Aceita `DATABASE_URL` (uma variável só, o jeito que a maioria das pessoas
+ * configura) e cai para as variáveis `PG*` quando ela não existe. O nome do
+ * banco vindo na URL é ignorado de propósito: quem escolhe é `prepararBanco`,
+ * porque este harness cria e derruba bancos.
+ */
+function lerConexao(): Conexao {
+  const url = process.env.DATABASE_URL;
+  if (url !== undefined && url.trim() !== '') {
+    try {
+      const u = new URL(url);
+      return {
+        host: decodeURIComponent(u.hostname) || '127.0.0.1',
+        port: Number(u.port || 5432),
+        user: decodeURIComponent(u.username) || 'postgres',
+        password: decodeURIComponent(u.password),
+      };
+    } catch {
+      throw new Error(`DATABASE_URL inválida: ${url}`);
+    }
+  }
+  return {
+    host: process.env.PGHOST ?? '127.0.0.1',
+    port: Number(process.env.PGPORT ?? 55432),
+    user: process.env.PGUSER ?? 'postgres',
+    password: process.env.PGPASSWORD ?? '',
+  };
+}
+
+export const CONEXAO: Conexao = lerConexao();
 
 const BANCO_PADRAO = process.env.PGDATABASE_TESTE ?? 'tcc_rls_test';
 

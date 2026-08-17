@@ -13,6 +13,8 @@
 
 import pg from 'pg';
 
+import { urlDemo } from '../app/lib/pgurl.ts';
+
 import { backtest, type Observacao, type PrevisaoEmitida } from '../supabase/functions/_shared/previsao/walkforward.ts';
 import { calcular, escalaMase, type Metricas } from '../supabase/functions/_shared/previsao/metricas.ts';
 
@@ -26,7 +28,7 @@ interface Args {
 }
 
 function lerArgs(argv: readonly string[]): Args {
-  let db = process.env.DATABASE_URL ?? 'postgres://postgres@127.0.0.1:55432/tcc_demo';
+  let db = urlDemo();
   let gravar = false;
   let minTreino = 26;
 
