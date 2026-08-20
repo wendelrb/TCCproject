@@ -56,6 +56,41 @@ Para repetir só a preparação dos dados, sem subir o servidor:
 npm run demo:dados
 ```
 
+## Rodar com a série REAL da ANP
+
+A demo acima é fictícia. Para ver o produto sobre a série de verdade:
+
+```powershell
+# 1. Baixe os .xlsx da ANP e ingira num banco SEPARADO (docs/INGESTAO_ANP.md)
+node scripts/ingest-anp.ts --db "postgres://postgres:postgres@127.0.0.1:5432/tcc_real" `
+  dados\semanal-estados-desde-2013.xlsx
+
+# 2. Rode o backtest sobre ela
+$env:TCC_BANCO="tcc_real"
+node scripts/backtest.ts --gravar
+
+# 3. Suba a interface apontando para o banco real
+npm run dev
+```
+
+`TCC_BANCO` é a única variável que muda. Sem ela, tudo continua caindo em
+`tcc_demo` — o padrão seguro.
+
+**Os bancos são separados de propósito.** A emenda no `CLAUDE.md` exige que dado
+fictício não conviva com dado real. Se algum dia os dois caírem no mesmo banco,
+a tela mostra um alarme vermelho e recusa todos os números da sessão.
+
+O que muda na interface, sozinho, sem configurar nada:
+
+| | `tcc_demo` | `tcc_real` |
+|---|---|---|
+| Selo no topo | FICTÍCIO + CLIENTE FICTÍCIO | ANP |
+| Preço, previsão, simulador, placar | fictícios | **reais**, com data de coleta |
+| Benchmark, relatório, alerta | funcionam (cliente fictício) | "sem cliente" — não há empresa real |
+
+A marcação é **derivada do dado**, lendo a coluna `fonte` de `fuel_prices`. Não
+existe interruptor para esquecer de ligar.
+
 ## Sem servidor nenhum
 
 Gera um HTML único, autocontido, que abre com duplo clique:
