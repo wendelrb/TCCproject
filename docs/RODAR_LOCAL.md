@@ -76,6 +76,31 @@ Ele cria o banco `tcc_real`, aplica as migrations, ingere os arquivos e roda o
 backtest walk-forward sobre a série real. Demora alguns minutos por arquivo — o
 de estados tem 114 mil linhas.
 
+### A vitrine: as sete telas ao mesmo tempo
+
+Sobre `tcc_real` puro, três telas (benchmark, relatório mensal, alerta) ficam
+vazias — dependem de abastecimentos de uma empresa, e não existe cliente real.
+
+Para ver o produto inteiro, monte a **vitrine**: uma cópia de `tcc_real` com uma
+empresa fictícia por cima. Um comando:
+
+```powershell
+npm run vitrine
+```
+
+Ele copia `tcc_real` (que **não** é alterado), cria `tcc_vitrine` e gera as
+compras — cada uma ancorada no preço REAL do município naquela semana real.
+Rodar de novo não duplica nem derruba; para refazer, `--recriar`.
+
+```powershell
+$env:TCC_BANCO="tcc_vitrine"; npm run dev
+```
+
+O cabeçalho passa a mostrar **dois selos**: `ANP` no preço e `CLIENTE FICTÍCIO`
+no que vem da empresa. Ver `ASSUMPTIONS.md` A-026.
+
+### Só a série real, sem cliente
+
 Depois, suba a interface apontando para ele:
 
 ```powershell
