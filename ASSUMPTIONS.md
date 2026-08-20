@@ -269,3 +269,38 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   regional; se o modelo externo prevê o agregado Brasil, ele não encaixa sem retreino por
   UF ou sem um nível `BR` que não alimenta o benchmark. Pergunta pendente ao autor do
   modelo.
+
+## A-023 — Leitor de .xlsx próprio, sem dependência nova
+
+- **Status:** DECIDIDA
+- **Dúvida:** a ANP publica `.xlsx`, e o pipeline só lia CSV. Instalar uma
+  biblioteca de planilha, pedir conversão manual para CSV, ou escrever o leitor?
+- **Decisão:** **escrever o leitor** (`_shared/anp/xlsx.ts`). Um `.xlsx` é um ZIP com
+  XML dentro, e a plataforma já traz `DecompressionStream('deflate-raw')` (Node 18+ e
+  Deno). O subconjunto necessário — ZIP, sharedStrings, styles e células — é pequeno e
+  estável. O projeto já escreve o próprio leitor de CSV pelo mesmo motivo.
+- **Alternativa descartada 1:** biblioteca de planilha. A regra do CLAUDE.md pede
+  justificativa por dependência, e as bibliotecas do gênero trazem superfície muito
+  maior do que o necessário para ler uma tabela retangular.
+- **Alternativa descartada 2:** pedir ao usuário que abra no Excel e exporte CSV.
+  Quebra a idempotência (passo manual não é reproduzível) e a proveniência (o hash
+  registrado deixaria de ser o do arquivo da fonte).
+- **Consequência que quase virou bug:** o leitor emite número em formato **BR**
+  (vírgula decimal). No XML do xlsx o decimal é ponto, e `numeroBr` — usada por todo o
+  resto do pipeline — trata ponto como separador de MILHAR. Emitir `6.199` faria
+  `numeroBr` devolver `6199`: preço mil vezes maior, sem erro, sem descarte. A
+  conversão acontece na saída do leitor e tem teste dedicado.
+- **Também tratado:** célula vazia não existe no XML do xlsx. Ler por ordem de
+  aparição desloca a linha e carrega preço na coluna do município. O leitor preenche
+  pelo índice da referência (`r="C7"`), com teste.
+
+## A-024 — O formato do arquivo é decidido pelo conteúdo, não pela extensão
+
+- **Status:** DECIDIDA
+- **Dúvida:** `scripts/ingest-anp.ts` recebe caminhos e URLs. Decidir CSV vs xlsx pelo
+  sufixo do nome ou pelos primeiros bytes?
+- **Decisão:** pelos **primeiros bytes** (`PK\x03\x04` = ZIP = xlsx). Órgão público já
+  publicou arquivo com extensão trocada; confiar no nome é confiar no rótulo em vez de
+  olhar dentro da caixa.
+- **Alternativa descartada:** `endsWith('.xlsx')`. Falha silenciosamente exatamente no
+  caso em que mais importa acertar — arquivo mal nomeado na fonte.

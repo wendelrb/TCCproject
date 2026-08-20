@@ -1,6 +1,12 @@
-// Do CSV bruto da ANP para linhas normalizadas de fuel_prices.
+// Do arquivo bruto da ANP para linhas normalizadas de fuel_prices.
+//
+// O núcleo trabalha sobre uma TABELA, não sobre um formato: `lerCsv` e
+// `tabelaDeXlsx` produzem a mesma forma, e daí para baixo o caminho é único.
+// Um parser só significa um conjunto de testes só — e nenhuma chance de o
+// caminho do xlsx divergir do caminho do CSV na primeira mudança.
 
-import { lerCsv } from './csv.ts';
+import { lerCsv, type TabelaCsv } from './csv.ts';
+import { tabelaDeXlsx } from './xlsx.ts';
 import { resolverColunas, type CampoAnp, type MapaColunas } from './colunas.ts';
 import { classificarProduto } from './produto.ts';
 import { dataBr, inteiro, normalizar, numeroBr, siglaUf } from './texto.ts';
@@ -22,7 +28,15 @@ export function somarDias(iso: string, dias: number): string {
 }
 
 export function parsearAnp(texto: string): ResultadoParse {
-  const tabela = lerCsv(texto);
+  return parsearTabela(lerCsv(texto));
+}
+
+/** Mesma normalização, a partir de um .xlsx — o formato que a ANP publica. */
+export async function parsearAnpXlsx(bytes: Uint8Array, aba?: string): Promise<ResultadoParse> {
+  return parsearTabela(await tabelaDeXlsx(bytes, 4, aba));
+}
+
+export function parsearTabela(tabela: TabelaCsv): ResultadoParse {
   const mapa = resolverColunas(tabela.cabecalho);
 
   const colunasAproximadas = [...mapa.entries()]

@@ -6,17 +6,21 @@
 // nesta sessão (egresso bloqueado). Com este runner, quem tiver acesso à rede
 // da ANP roda a ingestão de verdade e devolve o output bruto.
 //
+// Aceita .xlsx (o formato que a ANP publica) e CSV. O formato é decidido pelo
+// conteúdo do arquivo, não pela extensão.
+//
 // Uso:
-//   node scripts/ingest-anp.ts [--db <url>] [--serie UF] <arquivo.csv|https://...> ...
+//   node scripts/ingest-anp.ts [--db <url>] [--serie UF] [--aba NOME] <arquivo|https://...> ...
 //
 // Exemplos:
+//   node scripts/ingest-anp.ts dados/semanal-estados.xlsx --serie SP
 //   node scripts/ingest-anp.ts dados/anp-2024.csv dados/anp-2025.csv --serie SP
-//   node scripts/ingest-anp.ts --url https://.../semanal.csv
+//   node scripts/ingest-anp.ts --url https://www.gov.br/anp/.../semanal-estados.xlsx
 
 import { readFile } from 'node:fs/promises';
 import pg from 'pg';
 
-import { parsearAnp } from '../supabase/functions/_shared/anp/parser.ts';
+import { parsearAnp, parsearAnpXlsx } from '../supabase/functions/_shared/anp/parser.ts';
 import { gravarPrecos } from '../supabase/functions/_shared/anp/persistencia.ts';
 import { analisarCadencia } from '../supabase/functions/_shared/anp/semanas.ts';
 import { decodificar } from '../supabase/functions/_shared/anp/texto.ts';
@@ -25,6 +29,7 @@ import { ErroFonteAnp, type Executor } from '../supabase/functions/_shared/anp/t
 interface Args {
   readonly db: string;
   readonly serie: string | null;
+  readonly aba: string | null;
   readonly fontes: readonly string[];
 }
 
@@ -32,6 +37,7 @@ function lerArgs(argv: readonly string[]): Args {
   const fontes: string[] = [];
   let db = process.env.DATABASE_URL ?? 'postgres://postgres@127.0.0.1:55432/postgres';
   let serie: string | null = null;
+  let aba: string | null = null;
 
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
@@ -41,6 +47,9 @@ function lerArgs(argv: readonly string[]): Args {
     } else if (a === '--serie') {
       serie = (argv[i + 1] ?? '').toUpperCase() || null;
       i += 1;
+    } else if (a === '--aba') {
+      aba = argv[i + 1] ?? null;
+      i += 1;
     } else if (a === '--url') {
       const u = argv[i + 1];
       if (u !== undefined) fontes.push(u);
@@ -49,16 +58,28 @@ function lerArgs(argv: readonly string[]): Args {
       fontes.push(a);
     }
   }
-  return { db, serie, fontes };
+  return { db, serie, aba, fontes };
 }
 
-async function carregar(fonte: string): Promise<string> {
+async function carregar(fonte: string): Promise<Uint8Array> {
   if (/^https?:\/\//i.test(fonte)) {
     const r = await fetch(fonte, { redirect: 'follow' });
     if (!r.ok) throw new ErroFonteAnp(`ANP respondeu ${r.status} ${r.statusText} para ${fonte}`);
-    return decodificar(new Uint8Array(await r.arrayBuffer()));
+    return new Uint8Array(await r.arrayBuffer());
   }
-  return decodificar(new Uint8Array(await readFile(fonte)));
+  return new Uint8Array(await readFile(fonte));
+}
+
+/**
+ * Decide pelo CONTEÚDO, não pela extensão.
+ *
+ * Todo ZIP — e um .xlsx é um ZIP — começa com "PK\x03\x04". A ANP já publicou
+ * arquivo com extensão trocada; confiar no nome é como confiar no rótulo em vez
+ * de olhar dentro da caixa.
+ */
+async function parsear(bytes: Uint8Array, aba: string | null) {
+  const ehZip = bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
+  return ehZip ? parsearAnpXlsx(bytes, aba ?? undefined) : parsearAnp(decodificar(bytes));
 }
 
 function criarExecutor(pool: pg.Pool): Executor {
@@ -95,7 +116,7 @@ async function main(): Promise<void> {
     const aproximadas = new Set<string>();
 
     for (const fonte of args.fontes) {
-      const { linhas, relatorio } = parsearAnp(await carregar(fonte));
+      const { linhas, relatorio } = await parsear(await carregar(fonte), args.aba);
       const r = await gravarPrecos(exec, linhas, `ANP:${fonte}`, coletadoEm);
       inseridas += r.inseridas;
       atualizadas += r.atualizadas;

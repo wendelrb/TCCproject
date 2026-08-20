@@ -1,7 +1,7 @@
 # O que ainda não está conectado
 
 Lista viva do que a demo **simula** e do que depende de coisa externa que este
-ambiente não alcança. Atualizada em 2026-08-14.
+ambiente não alcança. Atualizada em 2026-08-20.
 
 Regra que vale aqui: nada nesta lista pode ser apresentado como funcionando.
 
@@ -14,12 +14,15 @@ Regra que vale aqui: nada nesta lista pode ser apresentado como funcionando.
   (`403` no CONNECT, confirmado por `curl` e pela ferramenta de fetch).
 - **O que existe pronto:** o pipeline inteiro (`supabase/functions/ingest-anp` +
   `scripts/ingest-anp.ts`), testado contra fixtures, com falha alta se o cabeçalho
-  não bater.
+  não bater. Desde 2026-08-20 lê **.xlsx**, que é o formato em que a ANP publica
+  (`_shared/anp/xlsx.ts`, sem dependência nova).
 - **Consequência:** `DATA_PROVENANCE.md` segue **sem nenhuma entrada válida**, e o
-  contrato de colunas em `_shared/anp/colunas.ts` é **hipótese, não observação**
-  (A-016).
-- **Como destravar:** liberar `*.gov.br` no ambiente (Network access → Custom), ou
-  commitar os CSVs no repositório.
+  contrato de colunas em `_shared/anp/colunas.ts` continua sendo **hipótese, não
+  observação** (A-016) — agora corroborada por um parser de terceiro que roda
+  contra o arquivo real, o que ainda não é o mesmo que ter rodado nós.
+- **Como destravar:** passo a passo em `docs/INGESTAO_ANP.md`. Ou liberar
+  `*.gov.br` no ambiente (Network access → Custom), ou baixar o arquivo numa
+  máquina com rede e rodar `scripts/ingest-anp.ts` contra ele.
 
 ## 2. IBGE — tabela de municípios · BLOQUEADO POR REDE
 
