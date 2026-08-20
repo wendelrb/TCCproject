@@ -181,8 +181,32 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   campo obrigatório não resolve. Jamais assumir posição fixa de coluna.
 - **Alternativa descartada:** indexar por posição — funcionaria no primeiro arquivo e
   carregaria número na coluna errada, em silêncio, no primeiro que mudasse de layout.
-- **Dívida:** a primeira execução contra o arquivo real vai confirmar ou derrubar esses
-  nomes. Enquanto não rodar, **o parser está não validado contra a fonte**.
+- **Dívida QUITADA em 2026-08-20.** A primeira execução contra o arquivo real
+  (`SEMANAL_ESTADOS-DESDE_2013.xlsx`, sha `d526889b…`) **confirmou o contrato inteiro**.
+  Cabeçalho observado, linha 16 da planilha:
+
+  ```
+  DATA INICIAL | DATA FINAL | REGIÃO | ESTADO | PRODUTO |
+  NÚMERO DE POSTOS PESQUISADOS | UNIDADE DE MEDIDA | PREÇO MÉDIO REVENDA |
+  DESVIO PADRÃO REVENDA | PREÇO MÍNIMO REVENDA | PREÇO MÁXIMO REVENDA |
+  MARGEM MÉDIA REVENDA | COEF DE VARIAÇÃO REVENDA | PREÇO MÉDIO DISTRIBUIÇÃO |
+  DESVIO PADRÃO DISTRIBUIÇÃO | PREÇO MÍNIMO DISTRIBUIÇÃO |
+  PREÇO MÁXIMO DISTRIBUIÇÃO | COEF DE VARIAÇÃO DISTRIBUIÇÃO
+  ```
+
+  Todos os campos obrigatórios e opcionais resolveram por **casamento exato** (a
+  normalização de acentos já dava conta de `PREÇO` → `PRECO`). Nenhum resolveu por
+  aproximação — o relatório de `colunasAproximadas` saiu vazio. Três colunas do arquivo
+  não têm campo correspondente e foram ignoradas: `REGIÃO`, `MARGEM MÉDIA REVENDA` e os
+  dois coeficientes de variação.
+
+  Duas descobertas que só a execução real traria:
+  - o arquivo de estados **não tem coluna `MUNICIPIO`** — por isso `municipio` é
+    opcional no contrato, e a ausência classifica a linha como nível `UF`. Funcionou;
+  - `OLEO DIESEL` aparece em paralelo ao `OLEO DIESEL S10` durante todo o período
+    (18.851 contra 18.902 linhas). É o diesel comum (S500), produto diferente. O
+    classificador marcou como `SUSPEITO` e descartou — que é o certo. Confirmação
+    humana registrada em `source_breaks`.
 
 ## A-017 — Dependências novas
 
@@ -304,3 +328,35 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   olhar dentro da caixa.
 - **Alternativa descartada:** `endsWith('.xlsx')`. Falha silenciosamente exatamente no
   caso em que mais importa acertar — arquivo mal nomeado na fonte.
+
+
+## A-025 — A demo fictícia e a série real vivem em bancos separados
+
+- **Status:** DECIDIDA
+- **Dúvida:** com a ANP finalmente ingerida, os dados reais devem entrar no `tcc_demo`,
+  que já tem a série fictícia e as duas organizações de demonstração?
+- **Decisão:** **não.** Banco separado, `tcc_real`. A emenda de 2026-08-14 ao CLAUDE.md
+  autoriza dado fictício **sob a condição de viver em banco separado**; misturar as duas
+  séries na mesma tabela destruiria a condição e tornaria impossível dizer, olhando uma
+  linha, se ela é real ou inventada.
+- **Alternativa descartada:** uma coluna `ficticio boolean` na mesma tabela. Um `where`
+  esquecido em qualquer consulta contamina relatório, e o custo do erro aqui é publicar
+  número inventado como métrica de produto.
+- **Pendência:** `app/lib/pgurl.ts` força o banco `tcc_demo`. Para a interface abrir
+  sobre a série real é preciso decidir se a demo passa a ter dois modos (real e
+  fictício, com marcação distinta em tela) ou se vira só real. **Decisão do dono do
+  produto**, não tomada aqui.
+
+## A-026 — O intervalo P10–P90 está descalibrado, e isso fica registrado
+
+- **Status:** ABERTA — defeito medido, correção não decidida
+- **Fato medido** (backtest de 2026-08-20 sobre a série real, 27 UFs, 701 semanas):
+  a cobertura nominal do intervalo é 80% e a **observada é 61,8%**, degradando de 64,1%
+  em h=1 para 59,9% em h=4. Está registrado em `docs/resultados/BACKTEST_ANP_2026-08-20.md`.
+- **Causa provável:** os quantis empíricos dos resíduos da janela de treino subestimam a
+  volatilidade futura da série, que tem choques (greve, mudança de política de preços).
+- **Por que não foi corrigido agora:** corrigir exige mudar o método de intervalo, o que
+  é decisão de produto e de escopo — e o CLAUDE.md proíbe ajustar até o número agradar.
+  Alargar a banda por um fator escolhido a posteriori seria exatamente isso.
+- **O que NÃO fazer:** multiplicar o intervalo por uma constante calibrada no próprio
+  backtest. Seria vazamento — a constante teria visto o futuro que ela deveria prever.
