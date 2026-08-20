@@ -384,3 +384,53 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   emenda depende disso.
 - **Telas que dependem de cliente** (benchmark, relatório mensal, alerta) mostram estado vazio
   explicando que não há cliente, em vez de quebrar ou inventar organização.
+
+## A-026 — Cliente fictício ancorado em série real, em banco próprio (`tcc_vitrine`)
+
+- **Status:** DECIDIDA — **pendente de ratificação do dono do produto** (ver ressalva)
+- **Dúvida:** as telas de benchmark, relatório mensal e alerta semanal dependem de
+  abastecimentos de uma empresa. Com a série real da ANP carregada, elas ficam vazias,
+  porque não existe cliente real. Deixar vazio, ou gerar um cliente fictício ao lado do
+  preço real?
+- **Decisão:** **gerar o cliente**, em um terceiro banco (`tcc_vitrine`), criado como
+  cópia de `tcc_real`. Três bancos, cada um com uma verdade:
+  - `tcc_demo` — tudo fictício (preço e cliente). Intocado.
+  - `tcc_real` — tudo real (só ANP). **Intocado, permanece puro.**
+  - `tcc_vitrine` — preço REAL da ANP + cliente FICTÍCIO, cada bloco com selo próprio.
+- **Por que ancorar em vez de sortear:** cada compra usa como referência o preço REAL do
+  município naquela semana real (ou o da UF, quando a ANP não pesquisou o município).
+  É a mesma referência que o benchmark usa para comparar. Sem isso o "você pagou X%
+  acima" seria ruído com cara de número.
+- **Alternativa descartada:** deixar as três telas vazias. Tecnicamente honesto, mas
+  esconde metade do produto — justamente a metade que o cliente compra.
+- **Alternativa descartada 2:** gerar o cliente dentro de `tcc_real`. Contamina o banco
+  que existe para ser a referência limpa da série da ANP.
+
+### Ressalva constitucional — precisa da palavra do dono do produto
+
+A emenda de 2026-08-14 diz, na condição 1, que dado fictício "vive em banco separado
+(`tcc_demo`)". `tcc_vitrine` é um segundo lugar com dado fictício, que a emenda não
+previu — ela foi escrita quando não existia série real alguma.
+
+O **propósito** da condição continua servido, e por mecanismo mais forte que o original:
+
+- `fuel_prices` em `tcc_vitrine` é **100% ANP**; a proveniência classifica a série como
+  `ANP`, não `MISTA`;
+- o fictício está confinado a `organizations`, `import_batches` e `fuel_purchases`;
+- a marcação é **derivada do dado** (A-025), não de flag: o cabeçalho mostra `ANP` e
+  `CLIENTE FICTÍCIO` como dois selos distintos, e cada bloco carrega o seu;
+- o gerador exige `PERMITIR_CLIENTE_FICTICIO=1`, recusa string de conexão de Supabase, e
+  **para** se não houver série real a que ancorar.
+
+**Redação de substituição proposta para a condição 1** (a decidir pelo dono do produto):
+
+> 1. Dado fictício vive em banco separado do de produção, e **nunca** na tabela
+>    `fuel_prices` de um banco que contenha série real. São permitidos `tcc_demo`
+>    (fictício integral) e `tcc_vitrine` (preço real da ANP + cliente fictício). Em
+>    qualquer caso, a origem de cada bloco é derivada do dado e exibida na tela. Os
+>    seeds abortam se a conexão apontar para Supabase gerenciado e exigem confirmação
+>    explícita por variável de ambiente.
+
+Enquanto não houver ratificação, `tcc_vitrine` não deve ser usado como evidência em
+relatório ou defesa — e **nenhum número de cliente que sai dele é métrica do produto**,
+exatamente como na demo.
