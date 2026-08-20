@@ -176,15 +176,60 @@ tela sequer. E vale o mesmo: nada de métrica pronta no payload.
 
 ---
 
-## 7. Estado atual (2026-08-20)
+## 7. Como rodar a importação
+
+```bash
+# 1. Confere o arquivo sem gravar nada. Sempre faça isto primeiro.
+npm run previsoes:importar -- --conferir previsoes-arima.csv
+
+# 2. Grava, preenche o realizado a partir da ANP e imprime o placar.
+npm run previsoes:importar -- previsoes-arima.csv
+```
+
+A conexão vem de `DATABASE_URL` (ou de `--db <url>`). Aceita vários arquivos de
+uma vez e também URLs `https://`.
+
+O que o comando faz, em ordem:
+
+1. **Valida.** Problema de cabeçalho derruba na hora; problema de linha é
+   acumulado e a lista **inteira** sai de uma vez. Se houver qualquer erro,
+   **nada é gravado** — não existe importação parcial.
+2. **Agrupa por execução** — uma `forecast_run` por (modelo, origem, corte).
+3. **Grava as previsões.** `forecasts` é imutável por trigger, então reimportar
+   o mesmo arquivo devolve `0 previsões novas` em vez de duplicar ou reescrever.
+4. **Deriva a classe** ALTA/ESTAVEL/QUEDA sobre a série cortada em `dados_ate`.
+5. **Preenche o realizado** a partir de `fuel_prices`, só para alvos que a ANP
+   já publicou.
+6. **Imprime o placar** contra o naive — e diz quando o modelo perde.
+
+Exemplo de saída real do passo 6 (banco de teste, série de fixture — **estes
+números não são métrica de produto nem resultado de backtest**):
+
+```
+=== PLACAR (realizado vindo de fuel_prices) ===
+UF   modelo                     n      MAE      RMSE     PICP%
+SP   arima-demo-v1                3   0.0083   0.0096    100.0
+SP   naive-demo-v1                3   0.0400   0.0424     66.7
+
+✓ SP: arima-demo-v1 MAE 0.0083 bate o naive (0.0400)
+```
+
+## 8. Estado atual (2026-08-20)
 
 Para não haver dúvida sobre o que existe:
 
 - **A web existe** — 7 telas em Next.js, lendo o Postgres com RLS.
 - **A camada de previsão existe** — Edge Function `forecast`, motor
   walk-forward em TypeScript, com placar.
-- **O adaptador para modelo externo NÃO existe.** Ninguém consome o modelo de
-  ninguém ainda.
+- **O adaptador para modelo externo existe** — `scripts/importar-previsoes.ts`
+  mais `_shared/modeloExterno/`, com 26 testes.
+- **Nenhum modelo externo foi importado ainda.** O adaptador está pronto e
+  testado; falta o arquivo do modelo.
 - **A série real da ANP NÃO foi ingerida** — egresso bloqueado no ambiente;
   `DATA_PROVENANCE.md` sem entrada válida. Todo número visível hoje é fictício,
   de demonstração, e não pode ser citado como métrica do produto.
+
+Consequência prática da última linha: importar previsões hoje só funciona contra
+o banco de demonstração ou de teste, porque a gravação **exige** a série da ANP
+carregada para a UF — sem ela, ela para com erro em vez de inventar uma
+referência de preço.
