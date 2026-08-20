@@ -8,16 +8,22 @@ import { componentesAntd, tokensAntd } from './tema.ts';
 import { usuarioAtual, USUARIOS } from './lib/demo.ts';
 import { TrocaUsuario } from './components/TrocaUsuario.tsx';
 import { Nav } from './components/Nav.tsx';
+import { AlarmeMistura, SeloCliente, SeloSerie } from './components/Selos.tsx';
 import { precoAtual } from './lib/consultas.ts';
+import { proveniencia } from './lib/proveniencia.ts';
+import { Rodape } from './components/Rodape.tsx';
 
 export const metadata = {
   title: 'Mesa Diesel S-10',
-  description: 'Demonstração com dados fictícios. Nenhum número desta tela é real.',
+  description: 'Preço, previsão e benchmark de diesel S-10 a partir do levantamento semanal da ANP.',
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const usuario = await usuarioAtual();
-  const atual = await precoAtual(usuario).catch(() => null);
+  const [atual, proc] = await Promise.all([
+    precoAtual(usuario).catch(() => null),
+    proveniencia(usuario),
+  ]);
   const semana = atual?.semana ?? '—';
 
   return (
@@ -43,8 +49,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 Mesa <b>Diesel S-10</b> <em>ANP · semanal</em>
               </div>
               <div className="dir">
-                {/* Exigência da emenda no CLAUDE.md: marcação visível em toda tela. */}
-                <span className="selo-demo">DADOS FICTÍCIOS</span>
+                {/*
+                  Marcação visível em toda tela (emenda no CLAUDE.md), mas
+                  derivada do dado: um selo para a série pública, outro para o
+                  cliente. Com série real e cliente fictício, os dois aparecem —
+                  que é exatamente o estado do produto hoje.
+                */}
+                <SeloSerie p={proc} curto />
+                {proc.cliente === 'FICTICIO' ? <SeloCliente p={proc} /> : null}
                 <span style={{ fontSize: 11.5, color: 'var(--ink-3)' }}>
                   semana{' '}
                   <b style={{ fontFamily: 'var(--mono)', color: 'var(--ink-2)', fontWeight: 600 }}>
@@ -60,15 +72,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 <Nav />
               </nav>
               <main className="conteudo">
+                <AlarmeMistura p={proc} />
                 {children}
-                <p className="rodape-nota">
-                  Demonstração com dados inteiramente fictícios — nenhum número aqui pode ser citado
-                  como métrica do produto. As consultas rodam sob <code>role authenticated</code> com{' '}
-                  <code>request.jwt.claims</code> preenchido, contra as migrations de produção: a RLS que
-                  separa as organizações é a real. Trocar de organização acima muda o{' '}
-                  <code>auth.uid()</code> e o filtro acontece dentro do Postgres. Paleta de série
-                  validada para separação em daltonismo; alta e queda carregam seta e sinal, nunca só cor.
-                </p>
+                <Rodape p={proc} />
               </main>
             </div>
           </ConfigProvider>

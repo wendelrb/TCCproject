@@ -2,14 +2,16 @@ import { Card, Alert, Tag } from 'antd';
 
 import { usuarioAtual } from '../lib/demo.ts';
 import { benchmark, placar, precoAtual, previsoes } from '../lib/consultas.ts';
+import { proveniencia } from '../lib/proveniencia.ts';
+import { SemCliente } from '../components/Selos.tsx';
 import { assuntoAlerta, corpoAlerta } from '../../supabase/functions/_shared/email/alertaSemanal.ts';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Pagina() {
   const u = await usuarioAtual();
-  const [atual, prev, bm, linhasPlacar] = await Promise.all([
-    precoAtual(u), previsoes(u), benchmark(u), placar(u, 12),
+  const [atual, prev, bm, linhasPlacar, proc] = await Promise.all([
+    precoAtual(u), previsoes(u), benchmark(u), placar(u, 12), proveniencia(u),
   ]);
 
   const modelo = linhasPlacar.find((l) => l.modelo !== 'naive-v1');
@@ -28,11 +30,26 @@ export default async function Pagina() {
     benchmarkPercentual: bm?.diferencaPercentual ?? null,
     modeloBateNaive: bate,
     linkDescadastro: 'https://exemplo.invalid/descadastro?t=TOKEN_DEMO',
-    ficticio: true,
+    // A peça se marca como fictícia quando QUALQUER metade dela é inventada.
+    // Hoje isso é sempre verdade quando há destinatário, porque a organização
+    // é de demonstração — o alerta só perde a tarja quando existir cliente real.
+    ficticio: proc.serie !== 'ANP' || proc.cliente === 'FICTICIO',
   };
 
   const assunto = assuntoAlerta(dados);
   const html = corpoAlerta(dados);
+
+  if (proc.cliente === 'AUSENTE') {
+    return (
+      <>
+        <div className="cabeca">
+          <h1>Alerta semanal</h1>
+          <p>Disparado após a ingestão da ANP, uma vez por semana, por organização.</p>
+        </div>
+        <SemCliente oQue="O alerta semanal" />
+      </>
+    );
+  }
 
   return (
     <>

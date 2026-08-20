@@ -24,8 +24,15 @@
   --sobe: #d8524f;
   --cai: #3fa46b;
 
+  /* Procedência do dado. Ver app/lib/proveniencia.ts e components/Selos.tsx. */
   --demo: #8c3a34;
   --demo-ink: #ffd9d5;
+  --real: #1c3d2d;
+  --real-ink: #93e2b7;
+  --vazio: #232f3b;
+  --vazio-ink: #9db1c2;
+  --alarme: #a5201c;
+  --alarme-ink: #ffe0dd;
 
   --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
@@ -80,12 +87,12 @@ body {
 .marca em { font-style: normal; color: var(--ink-3); font-weight: 500; font-size: 12px; }
 .barra .dir { margin-left: auto; display: flex; align-items: center; gap: 14px; }
 
-.selo-demo {
+/* Selo de procedência. A bolinha é sempre a mesma forma: o que muda é a cor,
+   e a cor nunca é a única informação — o texto diz a origem por extenso. */
+.selo {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--demo);
-  color: var(--demo-ink);
   padding: 3px 9px;
   border-radius: 5px;
   font-size: 10px;
@@ -93,7 +100,56 @@ body {
   letter-spacing: 0.1em;
   white-space: nowrap;
 }
-.selo-demo::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.selo::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+.selo-ficticio { background: var(--demo); color: var(--demo-ink); }
+.selo-real     { background: var(--real); color: var(--real-ink); }
+.selo-vazio    { background: var(--vazio); color: var(--vazio-ink); }
+.selo-alarme   { background: var(--alarme); color: var(--alarme-ink); }
+
+.alarme-mistura {
+  background: var(--alarme);
+  color: var(--alarme-ink);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.alarme-mistura code { background: rgba(0, 0, 0, 0.28); padding: 1px 5px; border-radius: 4px; }
+
+.vazio-cliente {
+  border: 1px dashed var(--hairline-forte);
+  border-radius: 8px;
+  padding: 22px 20px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.vazio-cliente p { margin: 0 0 10px; }
+.vazio-cliente p:last-child { margin-bottom: 0; }
+.vazio-cliente .titulo { color: var(--ink); font-weight: 650; font-size: 14.5px; }
+.vazio-cliente .dica { color: var(--ink-3); font-size: 12.5px; }
+.vazio-cliente code {
+  font-family: var(--mono);
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Linha de procedência no rodapé de um cartão. */
+.linha-fonte {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
 
 .layout { display: grid; grid-template-columns: 218px minmax(0, 1fr); align-items: start; }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }

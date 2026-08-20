@@ -3,6 +3,8 @@ import { Card, Alert } from 'antd';
 import { GraficoSerie } from './components/GraficoSerie.tsx';
 import { usuarioAtual } from './lib/demo.ts';
 import { benchmark, historicoUf, precoAtual } from './lib/consultas.ts';
+import { proveniencia } from './lib/proveniencia.ts';
+import { SeloCliente, SeloSerie, SemCliente } from './components/Selos.tsx';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +32,9 @@ function ChipDelta({ valor }: { valor: number | null }) {
 
 export default async function Pagina() {
   const u = await usuarioAtual();
-  const [atual, historico, bm] = await Promise.all([precoAtual(u), historicoUf(u), benchmark(u)]);
+  const [atual, historico, bm, proc] = await Promise.all([
+    precoAtual(u), historicoUf(u), benchmark(u), proveniencia(u),
+  ]);
   const acima = bm !== null && bm.diferencaPercentual > 0;
 
   return (
@@ -76,12 +80,25 @@ export default async function Pagina() {
 
         <div style={{ padding: '14px 16px 16px' }}>
           <GraficoSerie historico={historico} />
+          <div className="linha-fonte">
+            <SeloSerie p={proc} />
+            <span>preço médio de revenda, diesel S-10</span>
+          </div>
         </div>
       </Card>
 
-      <Card size="small" title="Benchmark" extra={<span className="rot">preço pago vs média da região</span>}>
+      <Card
+        size="small"
+        title="Benchmark"
+        extra={
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <span className="rot">preço pago vs média da região</span>
+            <SeloCliente p={proc} />
+          </span>
+        }
+      >
         {bm === null ? (
-          <p style={{ color: 'var(--ink-2)', margin: 0 }}>Nenhum abastecimento importado ainda.</p>
+          <SemCliente oQue="O benchmark" />
         ) : (
           <>
             <Alert

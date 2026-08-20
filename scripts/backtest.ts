@@ -9,11 +9,12 @@
 //   node scripts/backtest.ts [--db <url>] [--gravar] [--min-treino 26]
 //
 // ⚠️ As métricas que este script imprime valem o que valem os dados que estão
-// no banco. Contra o banco da demo, saem FICTÍCIAS — o cabeçalho avisa.
+// no banco. Contra o banco da demo, saem FICTÍCIAS — o cabeçalho avisa. O banco
+// padrão é o do app (`TCC_BANCO`, ou `tcc_demo`); use --db para outro.
 
 import pg from 'pg';
 
-import { urlDemo } from '../app/lib/pgurl.ts';
+import { urlBanco } from '../app/lib/pgurl.ts';
 
 import { backtest, type Observacao, type PrevisaoEmitida } from '../supabase/functions/_shared/previsao/walkforward.ts';
 import { calcular, escalaMase, type Metricas } from '../supabase/functions/_shared/previsao/metricas.ts';
@@ -28,7 +29,7 @@ interface Args {
 }
 
 function lerArgs(argv: readonly string[]): Args {
-  let db = urlDemo();
+  let db = urlBanco();
   let gravar = false;
   let minTreino = 26;
 

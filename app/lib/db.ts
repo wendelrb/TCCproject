@@ -1,17 +1,18 @@
 import pg from 'pg';
 
-import { urlDemo } from './pgurl.ts';
+import { urlBanco } from './pgurl.ts';
 
 /**
- * Acesso ao banco da DEMO.
+ * Acesso ao banco do app — `tcc_demo` por padrão, ou o que `TCC_BANCO` disser.
  *
  * O ponto importante: as consultas rodam sob `role authenticated` com
  * `request.jwt.claims` preenchido — exatamente como o PostgREST faz no Supabase.
  * Ou seja, **a RLS que isola as organizações é a de verdade**, com as policies
- * das migrations de produção. O que é falso aqui é o dado, não o mecanismo.
+ * das migrations de produção. O mecanismo é o mesmo em qualquer banco; o que
+ * muda é a procedência do dado, e quem responde por ela é `proveniencia.ts`.
  */
 
-const pool = new pg.Pool({ connectionString: urlDemo(), max: 6 });
+const pool = new pg.Pool({ connectionString: urlBanco(), max: 6 });
 
 export async function comoUsuario<T>(
   userId: string,

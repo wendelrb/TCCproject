@@ -360,3 +360,27 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   Alargar a banda por um fator escolhido a posteriori seria exatamente isso.
 - **O que NÃO fazer:** multiplicar o intervalo por uma constante calibrada no próprio
   backtest. Seria vazamento — a constante teria visto o futuro que ela deveria prever.
+
+## A-025 — A marcação de procedência é derivada do dado, não de um modo do app
+
+- **Status:** DECIDIDA
+- **Dúvida:** com a série real da ANP carregada e o cliente ainda fictício, como cumprir a
+  condição 2 da emenda de 2026-08-14 ("toda tela carrega marcação visível de dado fictício")
+  sem mentir na direção oposta — carimbar de fictício um número que é da ANP?
+- **Decisão:** a marcação passa a ser **derivada do próprio dado**, em `app/lib/proveniencia.ts`:
+  lê a coluna `fuel_prices.fonte` (`ANP:` versus o seed) e a existência de organização sob a RLS.
+  Cada bloco da tela carrega o selo da sua origem — série e cliente são marcados separadamente,
+  porque hoje têm procedências diferentes.
+- **Alternativa descartada 1:** um flag de build ou variável tipo `MODO_DEMO`. Cria o caminho em
+  que alguém esquece de ligar a tarja, que é exatamente o risco que a emenda quer eliminar.
+- **Alternativa descartada 2:** manter a tarja única de página. Passaria a afirmar que a série da
+  ANP é fictícia — afirmação falsa sobre procedência, num produto cuja proposta de valor é
+  honestidade sobre de onde vem o número.
+- **Estado `MISTA`:** quando o mesmo banco tem linha da ANP e linha do seed, a tela mostra alarme
+  vermelho e diz que nenhum número da sessão pode ser citado. É o detector da violação da
+  condição 1 da emenda, não um modo de exibição.
+- **Consequência no app:** `app/lib/pgurl.ts` ganha `urlBanco()`, que respeita `TCC_BANCO`
+  (padrão `tcc_demo`). `urlDemo()` continua forçando `tcc_demo` para o seed, porque a trava da
+  emenda depende disso.
+- **Telas que dependem de cliente** (benchmark, relatório mensal, alerta) mostram estado vazio
+  explicando que não há cliente, em vez de quebrar ou inventar organização.

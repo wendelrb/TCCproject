@@ -2,6 +2,8 @@ import { Card, Alert, Statistic } from 'antd';
 
 import { usuarioAtual } from '../lib/demo.ts';
 import { relatorioMensal } from '../lib/consultas.ts';
+import { proveniencia } from '../lib/proveniencia.ts';
+import { SeloCliente, SemCliente } from '../components/Selos.tsx';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +19,7 @@ function mesExtenso(mes: string): string {
 
 export default async function Pagina() {
   const u = await usuarioAtual();
-  const meses = await relatorioMensal(u);
+  const [meses, proc] = await Promise.all([relatorioMensal(u), proveniencia(u)]);
 
   const totalLitros = meses.reduce((s, m) => s + m.litros, 0);
   const totalValor = meses.reduce((s, m) => s + m.valorTotal, 0);
@@ -75,9 +77,12 @@ export default async function Pagina() {
         size="small"
         title="Relatório mensal — preço pago versus média da região"
         extra={
-          <a href="/relatorio/csv" download>
-            Exportar CSV
-          </a>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <SeloCliente p={proc} />
+            <a href="/relatorio/csv" download>
+              Exportar CSV
+            </a>
+          </span>
         }
       >
         <table className="tabela-simples">
@@ -116,7 +121,7 @@ export default async function Pagina() {
             ))}
           </tbody>
         </table>
-        {meses.length === 0 && <p>Nenhum abastecimento importado ainda.</p>}
+        {meses.length === 0 && <SemCliente oQue="O relatório mensal" />}
       </Card>
 
       <p className="rodape-nota">
