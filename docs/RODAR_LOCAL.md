@@ -58,29 +58,55 @@ npm run demo:dados
 
 ## Rodar com a série REAL da ANP
 
-A demo acima é fictícia. Para ver o produto sobre a série de verdade:
+A demo acima é fictícia. Para ver o produto sobre a série de verdade, você
+precisa dos `.xlsx` da ANP na sua máquina — quais baixar e de onde está em
+`docs/INGESTAO_ANP.md`. Salve em `dados/` (a pasta não é versionada).
+
+Aí é **um comando**:
 
 ```powershell
-# 1. Baixe os .xlsx da ANP e ingira num banco SEPARADO (docs/INGESTAO_ANP.md)
-node scripts/ingest-anp.ts --db "postgres://postgres:postgres@127.0.0.1:5432/tcc_real" `
-  dados\semanal-estados-desde-2013.xlsx
+npm run real -- dados\semanal-estados-desde-2013.xlsx dados\semanal-municipios-2026.xlsx
+```
 
-# 2. Rode o backtest sobre ela
-$env:TCC_BANCO="tcc_real"
-node scripts/backtest.ts --gravar
+```bash
+npm run real -- dados/semanal-estados-desde-2013.xlsx dados/semanal-municipios-2026.xlsx
+```
 
-# 3. Suba a interface apontando para o banco real
-npm run dev
+Ele cria o banco `tcc_real`, aplica as migrations, ingere os arquivos e roda o
+backtest walk-forward sobre a série real. Demora alguns minutos por arquivo — o
+de estados tem 114 mil linhas.
+
+Depois, suba a interface apontando para ele:
+
+```powershell
+$env:TCC_BANCO="tcc_real"; npm run dev
+```
+
+```bash
+TCC_BANCO=tcc_real npm run dev
 ```
 
 `TCC_BANCO` é a única variável que muda. Sem ela, tudo continua caindo em
 `tcc_demo` — o padrão seguro.
 
-**Os bancos são separados de propósito.** A emenda no `CLAUDE.md` exige que dado
-fictício não conviva com dado real. Se algum dia os dois caírem no mesmo banco,
-a tela mostra um alarme vermelho e recusa todos os números da sessão.
+### Rodar de novo é seguro
 
-O que muda na interface, sozinho, sem configurar nada:
+`npm run real` **não derruba** o banco. Se ele já existe, o script pula a
+criação e só reingere — e a ingestão é idempotente, então reprocessar o mesmo
+arquivo devolve `inseridas=0`. Para começar do zero de propósito, `--recriar`.
+
+Toda semana a ANP publica um arquivo novo: baixe e rode o mesmo comando.
+
+### Por que dois bancos
+
+A emenda no `CLAUDE.md` exige que dado fictício não conviva com dado real. Se
+algum dia os dois caírem no mesmo banco, a interface mostra alarme vermelho e
+recusa todos os números da sessão.
+
+### O que muda na interface, sozinho
+
+A marcação é **derivada do dado**, lendo a coluna `fonte` de `fuel_prices`. Não
+existe interruptor para esquecer de ligar.
 
 | | `tcc_demo` | `tcc_real` |
 |---|---|---|
@@ -88,8 +114,22 @@ O que muda na interface, sozinho, sem configurar nada:
 | Preço, previsão, simulador, placar | fictícios | **reais**, com data de coleta |
 | Benchmark, relatório, alerta | funcionam (cliente fictício) | "sem cliente" — não há empresa real |
 
-A marcação é **derivada do dado**, lendo a coluna `fonte` de `fuel_prices`. Não
-existe interruptor para esquecer de ligar.
+As três últimas ficam vazias no banco real porque dependem de abastecimentos de
+uma empresa, e não existe cliente. Inventar um ali violaria a regra de dados.
+
+### Depois de ingerir
+
+Registre a coleta em `DATA_PROVENANCE.md`: URL, licença, data, período coberto,
+unidade e SHA-256 de cada arquivo. Sem isso, pela regra do projeto, o dado não
+conta como coletado.
+
+```powershell
+Get-FileHash dados\semanal-estados-desde-2013.xlsx -Algorithm SHA256
+```
+
+```bash
+sha256sum dados/semanal-estados-desde-2013.xlsx
+```
 
 ## Sem servidor nenhum
 

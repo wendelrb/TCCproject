@@ -11,6 +11,7 @@
     "start": "next start",
     "demo:dados": "node scripts/preparar-demo.ts",
     "demo": "node scripts/preparar-demo.ts && next dev",
+    "real": "node scripts/preparar-real.ts",
     "demo:estatica": "node scripts/exportar-demo.ts demo.json && node scripts/gerar-estatica.ts demo.json demo-diesel.html",
     "previsoes:importar": "node scripts/importar-previsoes.ts",
     "test": "node --test tests/*.test.ts",
