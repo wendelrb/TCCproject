@@ -17,7 +17,8 @@
 //   node scripts/ingest-anp.ts dados/anp-2024.csv dados/anp-2025.csv --serie SP
 //   node scripts/ingest-anp.ts --url https://www.gov.br/anp/.../semanal-estados.xlsx
 
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
 import pg from 'pg';
 
 import { parsearAnp, parsearAnpXlsx } from '../supabase/functions/_shared/anp/parser.ts';
@@ -67,7 +68,36 @@ async function carregar(fonte: string): Promise<Uint8Array> {
     if (!r.ok) throw new ErroFonteAnp(`ANP respondeu ${r.status} ${r.statusText} para ${fonte}`);
     return new Uint8Array(await r.arrayBuffer());
   }
-  return new Uint8Array(await readFile(fonte));
+  try {
+    return new Uint8Array(await readFile(fonte));
+  } catch (erro) {
+    if ((erro as { code?: string }).code !== 'ENOENT') throw erro;
+    // O nome com que a ANP BAIXA o arquivo não é o mesmo que aparece no link da
+    // página. Em vez de só dizer "não existe", mostra o que existe na pasta —
+    // que é a informação de que a pessoa precisa para corrigir o comando.
+    throw new ErroFonteAnp(
+      `arquivo não encontrado: ${fonte}\n${await vizinhos(fonte)}`,
+    );
+  }
+}
+
+/** Lista as planilhas que existem na pasta onde o arquivo foi procurado. */
+async function vizinhos(fonte: string): Promise<string> {
+  const pasta = path.dirname(path.resolve(fonte)) || '.';
+  try {
+    const achados = (await readdir(pasta))
+      .filter((f) => /\.(xlsx|xlsb|xls|csv)$/i.test(f))
+      .sort();
+    if (achados.length === 0) {
+      return `A pasta ${pasta} existe mas não tem nenhuma planilha.\n` +
+        'Copie os arquivos .xlsx da ANP para lá. Ver docs/INGESTAO_ANP.md.';
+    }
+    return `Planilhas que existem em ${pasta}:\n` +
+      achados.map((f) => `  ${f}`).join('\n') +
+      '\n\nUse o nome EXATO, entre aspas se tiver espaço. No Git Bash a barra é `/`.';
+  } catch {
+    return `A pasta ${pasta} não existe. Crie-a e copie os .xlsx da ANP para lá.`;
+  }
 }
 
 /**
