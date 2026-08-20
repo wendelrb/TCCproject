@@ -44,29 +44,58 @@ Feito isso, a ingestão roda direto da URL, sem baixar nada à mão.
 
 Você tem Windows com rede normal. Baixe o arquivo e rode a ingestão local.
 
-### 3.1 De onde baixar
+### 3.1 Quais arquivos baixar
 
-A ANP publica a série em:
+Página: **Preços de revenda e de distribuição de combustíveis** → série histórica
+semanal. A lista de arquivos foi conferida em 2026-08-20:
 
-> https://www.gov.br/anp/pt-br/assuntos/precos-e-defesa-da-concorrencia/precos/precos-revenda-e-de-distribuicao-combustiveis
+| Arquivo | Formato | Serve? |
+|---|---|---|
+| `semanal-estados-desde-2013.xlsx` | xlsx | ✅ **é este o principal** — UF, série inteira |
+| `semanal-municipios-2026.xlsx` | xlsx | ✅ município, ano corrente |
+| `semanal-municipio-2024-2025.xlsx` | xlsx | ✅ município, histórico recente |
+| `semanal-municipios-2022-2024.xlsx` | xlsx | ✅ município, se quiser mais fundo |
+| `semanal-municipios-2022_a_2023.xlsx` | xlsx | ⚠️ contido no de cima; redundante |
+| `semanal-brasil-desde-2013.xlsx` | xlsx | ❌ média do Brasil — não é o que o produto vende |
+| `semanal-regioes-desde-2013.xlsx` | xlsx | ❌ nosso schema é UF e município, não região |
+| `semanal-municipio-2013-a-2017.xls` | **xls** | ❌ formato não lido (ver abaixo) |
+| `semanal-municipios-2013-2014.xlsb` | **xlsb** | ❌ formato não lido |
+| `semanal-municipios-2015-a-2017.xlsb` | **xlsb** | ❌ formato não lido |
+| `semanal-municipio-2018-a-2021.xlsb` | **xlsb** | ❌ formato não lido |
 
-Na seção de **série histórica semanal**, os arquivos são `.xlsx`. O agregado
-nacional tem URL confirmada:
+**Comece por `semanal-estados-desde-2013.xlsx`.** Sozinho ele já destrava série,
+previsão, placar de acurácia e o benchmark por UF — ou seja, o produto inteiro
+funcionando com dado real. Os de município só refinam o benchmark de "SP" para
+"Campinas".
 
-```
-.../shlp/semanal/semanal-brasil-desde-2013.xlsx
-```
+#### Sobre .xlsb e .xls
 
-> **Atenção — este é o arquivo errado para o nosso produto.** É a média do
-> Brasil. O nosso schema é por **UF e município**, porque o produto vende
-> *"o preço da SUA região"*. Você precisa dos arquivos **por estado** e **por
-> município** da mesma seção semanal.
->
-> Os nomes exatos desses dois arquivos **não estão confirmados** — a URL do
-> agregado veio do repositório do seu colega, que roda contra a fonte real; as
-> outras duas eu não consegui verificar daqui. Confira na página antes de baixar.
+O leitor lê **.xlsx**. Os outros dois são formatos diferentes, apesar do nome
+parecido:
 
-Salve em `dados/` na raiz do projeto (a pasta não é versionada).
+- **`.xlsb`** é ZIP por fora, igual ao xlsx, mas com as planilhas em registros
+  binários em vez de XML;
+- **`.xls`** é o formato binário OLE2 do Excel 97-2003.
+
+Se você baixar um deles por engano, a mensagem diz qual é e manda pegar o .xlsx —
+não vai falhar com erro obscuro.
+
+**Consequência prática:** a série por município só entra a partir de **2022**,
+porque antes disso a ANP só publica em .xlsb/.xls. Isso não atrapalha a v1: o
+histórico longo, que é o que alimenta o backtest, vem do arquivo de **estados**,
+que tem xlsx desde 2013.
+
+Se um dia precisarmos do município pré-2022, as opções são escrever um leitor de
+.xlsb ou converter no Excel — e a conversão manual quebra a idempotência e a
+proveniência (o hash deixaria de ser o do arquivo da fonte). Melhor não usar.
+
+#### Ordem de ingestão, quando houver sobreposição
+
+Os arquivos de município se sobrepõem (2022-2024 cobre parte de 2024-2025).
+Ingira **do mais antigo publicado para o mais recente**, olhando a data de
+"última modificação" na página, não o período no nome. O arquivo publicado depois
+traz os valores já revisados, e a última gravação é a que fica valendo — com a
+anterior arquivada em `fuel_prices_revisoes`.
 
 ### 3.2 Rodar
 
@@ -75,7 +104,7 @@ Salve em `dados/` na raiz do projeto (a pasta não é versionada).
 $env:DATABASE_URL="postgres://postgres:postgres@127.0.0.1:5432/postgres"
 
 node scripts/ingest-anp.ts --db "postgres://postgres:postgres@127.0.0.1:5432/tcc_demo" `
-  dados/semanal-estados.xlsx dados/semanal-municipios.xlsx --serie SP
+  dados\semanal-estados-desde-2013.xlsx --serie SP
 ```
 
 O runner aceita vários arquivos, e decide o formato **pelo conteúdo**, não pela
@@ -95,7 +124,7 @@ Uma de duas coisas vai acontecer, e **as duas são resultado bom**:
 Sai a série, e o relatório de cadência mostra gaps e descartes:
 
 ```
-[dados/semanal-estados.xlsx] lidas=40 aceitas=30 inseridas=30 atualizadas=0
+[dados/semanal-estados-desde-2013.xlsx] lidas=40 aceitas=30 inseridas=30 atualizadas=0
 
 === SEMANAS CARREGADAS ===
 distintas: 10   primeira: 2026-06-08   última: 2026-08-10
@@ -144,11 +173,11 @@ coleta, período coberto, unidade e SHA-256 do arquivo. Sem isso, pela regra do
 projeto, o dado não conta como coletado. Para o hash:
 
 ```powershell
-Get-FileHash dados\semanal-estados.xlsx -Algorithm SHA256
+Get-FileHash dados\semanal-estados-desde-2013.xlsx -Algorithm SHA256
 ```
 
 ```bash
-sha256sum dados/semanal-estados.xlsx
+sha256sum dados/semanal-estados-desde-2013.xlsx
 ```
 
 ---

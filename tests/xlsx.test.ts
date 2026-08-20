@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 
 import { parsearAnpXlsx } from '../supabase/functions/_shared/anp/parser.ts';
 import { lerXlsx, tabelaDeXlsx } from '../supabase/functions/_shared/anp/xlsx.ts';
-import { criarXlsx, data, numero, texto, vazia } from './xlsxFixture.ts';
+import { criarXlsbFalso, criarXlsx, data, numero, texto, vazia } from './xlsxFixture.ts';
 
 // 2026-08-03 no serial do Excel (época 1899-12-30).
 const SERIAL_2026_08_03 = 46237;
@@ -75,6 +75,34 @@ describe('leitura crua do xlsx', () => {
       (e: Error) => {
         assert.equal(e.name, 'ErroFonteAnp');
         assert.match(e.message, /não parece um arquivo \.xlsx/);
+        return true;
+      },
+    );
+  });
+
+  it('.xls antigo é reconhecido pelo nome do formato', async () => {
+    // A ANP publica a mesma série em .xlsx, .xlsb e .xls conforme o período.
+    // Baixar o arquivo errado da lista é o erro provável — a mensagem tem que
+    // dizer QUAL formato chegou, não "diretório ZIP não encontrado".
+    const ole2 = new Uint8Array([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1, 0, 0, 0, 0]);
+    await assert.rejects(
+      () => lerXlsx(ole2),
+      (e: Error) => {
+        assert.match(e.message, /\.xls antigo/);
+        assert.match(e.message, /\.xlsx/);
+        return true;
+      },
+    );
+  });
+
+  it('.xlsb é reconhecido: passa pelo ZIP e falha com o motivo certo', async () => {
+    // O .xlsb tem o mesmo empacotamento ZIP do .xlsx. Só se distingue por dentro.
+    const bytes = criarXlsbFalso();
+    await assert.rejects(
+      () => lerXlsx(bytes),
+      (e: Error) => {
+        assert.match(e.message, /\.xlsb/);
+        assert.match(e.message, /Use a versão \.xlsx/);
         return true;
       },
     );

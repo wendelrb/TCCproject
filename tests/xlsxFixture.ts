@@ -62,6 +62,19 @@ function zipar(arquivos: readonly Arquivo[]): Uint8Array {
   return new Uint8Array(Buffer.concat([corpo, diretorio, fim]));
 }
 
+/**
+ * Um .xlsb mínimo: mesmo empacotamento ZIP do .xlsx, planilha em `.bin`.
+ *
+ * Serve para provar que o leitor distingue os dois — por fora são idênticos, e
+ * a ANP publica a mesma série nos dois formatos conforme o período.
+ */
+export function criarXlsbFalso(): Uint8Array {
+  return zipar([
+    { nome: 'xl/workbook.bin', conteudo: Buffer.from([0x85, 0x01, 0x12, 0x00]) },
+    { nome: 'xl/worksheets/sheet1.bin', conteudo: Buffer.from([0x81, 0x01]) },
+  ]);
+}
+
 /** Célula do fixture: string compartilhada, número, ou data com estilo. */
 export type CelulaFixture =
   | { readonly tipo: 'texto'; readonly valor: string }

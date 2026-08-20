@@ -37,18 +37,44 @@ interface EntradaZip {
   readonly deslocamentoLocal: number;
 }
 
-function acharEocd(vista: DataView): number {
+/**
+ * Diz QUAL formato de planilha chegou, quando não for .xlsx.
+ *
+ * Existe porque a ANP publica a mesma série em três formatos (.xlsx, .xlsb e
+ * .xls, conforme o período), e cair aqui é o caminho provável de quem baixa o
+ * arquivo errado da lista. "Formato não suportado, use o .xlsx de tal período"
+ * resolve sozinho; "diretório ZIP não encontrado" manda a pessoa abrir issue.
+ */
+function diagnosticarFormato(bytes: Uint8Array): string | null {
+  const b = (i: number): number => bytes[i] ?? -1;
+
+  // OLE2/CFB: .xls (Excel 97-2003) e outros formatos binários da Microsoft.
+  if (b(0) === 0xd0 && b(1) === 0xcf && b(2) === 0x11 && b(3) === 0xe0) {
+    return 'este é um .xls antigo (Excel 97-2003), formato binário diferente do .xlsx';
+  }
+  if (b(0) === 0x09 && (b(1) === 0x08 || b(1) === 0x04 || b(1) === 0x02)) {
+    return 'este é um .xls antigo (BIFF), formato binário diferente do .xlsx';
+  }
+  return null;
+}
+
+function acharEocd(vista: DataView, bytes: Uint8Array): number {
   // O EOCD fica no fim, mas pode ter até 64 KiB de comentário depois dele.
   const minimo = Math.max(0, vista.byteLength - 65_557);
   for (let i = vista.byteLength - 22; i >= minimo; i -= 1) {
     if (vista.getUint32(i, true) === ASSINATURA_EOCD) return i;
   }
-  throw new ErroFonteAnp('não parece um arquivo .xlsx: fim do diretório ZIP não encontrado');
+  const diagnostico = diagnosticarFormato(bytes);
+  throw new ErroFonteAnp(
+    diagnostico === null
+      ? 'não parece um arquivo .xlsx: fim do diretório ZIP não encontrado'
+      : `${diagnostico}. Baixe a versão .xlsx da mesma série.`,
+  );
 }
 
 function lerDiretorio(bytes: Uint8Array): Map<string, EntradaZip> {
   const vista = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const eocd = acharEocd(vista);
+  const eocd = acharEocd(vista, bytes);
 
   const quantidade = vista.getUint16(eocd + 10, true);
   const inicioCentral = vista.getUint32(eocd + 16, true);
@@ -288,6 +314,16 @@ export async function lerXlsx(bytes: Uint8Array): Promise<readonly PlanilhaXlsx[
 
   const workbook = await pegar('xl/workbook.xml');
   if (workbook === null) {
+    // O .xlsb usa o mesmo empacotamento ZIP do .xlsx, mas com as planilhas em
+    // registros binários (.bin) no lugar do XML. Passa pela checagem de ZIP e só
+    // se revela aqui — daí valer a mensagem específica.
+    if (entradas.has('xl/workbook.bin')) {
+      throw new ErroFonteAnp(
+        'este é um .xlsb (Excel binário). Por fora é ZIP como o .xlsx, mas as ' +
+          'planilhas são registros binários, que este leitor não interpreta. ' +
+          'Use a versão .xlsx da mesma série.',
+      );
+    }
     throw new ErroFonteAnp('não parece um arquivo .xlsx: xl/workbook.xml ausente');
   }
 

@@ -63,8 +63,32 @@ Duas coisas mudaram, e nenhuma delas é dado coletado:
    ```
 
    **Isto é o agregado BRASIL** — não serve para o nosso produto, que é por UF e
-   município. As URLs dos arquivos por estado e por município **não foram
-   verificadas** e não devem ser escritas aqui até que alguém baixe o arquivo.
+   município.
+
+3. **A lista de arquivos da página foi conferida** (captura de tela da página da
+   ANP enviada pelo dono do produto, 2026-08-20). Nomes observados, ainda **não
+   baixados**:
+
+   | Arquivo | Formato | Última modificação |
+   |---|---|---|
+   | `semanal-estados-desde-2013.xlsx` | xlsx | 14/08/2026 |
+   | `semanal-municipios-2026.xlsx` | xlsx | 14/08/2026 |
+   | `semanal-brasil-desde-2013.xlsx` | xlsx | 14/08/2026 |
+   | `semanal-regioes-desde-2013.xlsx` | xlsx | 14/08/2026 |
+   | `semanal-municipio-2024-2025.xlsx` | xlsx | 05/01/2026 |
+   | `semanal-municipios-2022-2024.xlsx` | xlsx | 29/08/2024 |
+   | `semanal-municipios-2022_a_2023.xlsx` | xlsx | 22/08/2024 |
+   | `semanal-municipios-2013-2014.xlsb` | xlsb | 29/07/2025 |
+   | `semanal-municipios-2015-a-2017.xlsb` | xlsb | 29/07/2025 |
+   | `semanal-municipio-2018-a-2021.xlsb` | xlsb | 02/07/2025 |
+   | `semanal-municipio-2013-a-2017.xls` | xls | 02/07/2025 |
+
+   A série por UF (`semanal-estados-desde-2013.xlsx`) é a que interessa primeiro.
+   A série por município só existe em xlsx a partir de 2022 — antes disso é .xlsb
+   ou .xls, formatos que o leitor não interpreta (`docs/INGESTAO_ANP.md` §3.1).
+
+   **Nome de arquivo observado não é dado coletado.** Nenhuma URL completa foi
+   confirmada por download, e a licença de uso ainda não foi lida.
 
 Nada disso vira entrada de proveniência: **não há arquivo, não há hash, não há
 período coberto.** Entrada só nasce de download real.
