@@ -248,3 +248,24 @@ Status: `DECIDIDA` (vale) · `PENDENTE` (proposta, aguarda o dono do produto).
   "avaliar" nela — é vazamento, e produz acurácia que evapora em produção. O teste de
   não-vazamento em `tests/previsao.test.ts` existe para travar isso: ele muta o futuro
   da série e exige que nenhuma previsão anterior mude.
+
+## A-022 — Modelo externo entra por arquivo, não por chamada em tempo real
+
+- **Status:** DECIDIDA
+- **Dúvida:** o modelo treinado fora deste repositório (Python, do colega de projeto)
+  deve ser exposto como serviço HTTP consumido pela web, ou deve depositar resultado?
+- **Decisão:** **contrato de arquivo** (`docs/CONTRATO_MODELO.md`). O modelo externo
+  roda onde já roda e entrega CSV/JSON com `modelo_versao, uf, semana_origem, dados_ate,
+  horizonte_semanas, semana_alvo, valor_previsto, p10, p90`. Um adaptador em TypeScript
+  valida e grava em `forecast_runs` + `forecasts`. A web só lê o Postgres.
+- **Alternativa descartada:** a web chamar o modelo por HTTP a cada request. Colocaria
+  Python na stack (vedado pelo CLAUDE.md), acoplaria a disponibilidade da tela à de um
+  serviço externo para recalcular um número que só muda uma vez por semana, e não
+  deixaria registro imutável — sem o qual o placar de acurácia não pode existir.
+- **Não negociado:** métrica pronta (`mae`, `rmse`, `coverage`) **não** é importada.
+  Toda métrica é recalculada aqui sobre o realizado da ANP, com o mesmo protocolo para
+  todos os modelos. Métrica calculada de um lado não é comparável com a do outro.
+- **Bloqueio em aberto:** granularidade. O schema é por UF porque o produto vende preço
+  regional; se o modelo externo prevê o agregado Brasil, ele não encaixa sem retreino por
+  UF ou sem um nível `BR` que não alimenta o benchmark. Pergunta pendente ao autor do
+  modelo.
