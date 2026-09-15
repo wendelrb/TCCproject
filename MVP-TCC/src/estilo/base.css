@@ -1,0 +1,153 @@
+@import "./tokens.css";
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body, #app { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--tinta);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.015em; line-height: 1.25; }
+h1 { font-size: 22px; }
+h2 { font-size: 17px; }
+h3 { font-size: 15px; }
+p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+
+:focus-visible {
+  outline: 2px solid var(--marca);
+  outline-offset: 2px;
+  border-radius: var(--r-1);
+}
+
+/* ---------- utilitários de texto ---------- */
+
+.rot {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+}
+
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.sub { color: var(--tinta-2); font-size: 14px; }
+
+/* ---------- cartão ---------- */
+
+.cartao {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--r-2);
+  box-shadow: var(--sombra-1);
+}
+.cartao-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--linha);
+}
+.cartao-corpo { padding: 16px; }
+
+/* ---------- chips e selos ---------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  padding: 2px 7px;
+  border-radius: var(--r-1);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.chip-sobe { background: var(--sobe-veu); color: var(--sobe); border-color: color-mix(in srgb, var(--sobe) 26%, transparent); }
+.chip-cai { background: var(--cai-veu); color: var(--cai); border-color: color-mix(in srgb, var(--cai) 26%, transparent); }
+.chip-neutro { background: var(--superficie-2); color: var(--tinta-2); border-color: var(--linha); }
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: var(--r-1);
+  white-space: nowrap;
+}
+.selo::before {
+  content: "";
+  width: 5px; height: 5px; border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+.selo-ficticio { background: var(--atencao-veu); color: var(--atencao); border: 1px solid color-mix(in srgb, var(--atencao) 34%, transparent); }
+.selo-anp { background: var(--marca-veu); color: var(--marca); border: 1px solid color-mix(in srgb, var(--marca) 34%, transparent); }
+
+/* ---------- tabela ---------- */
+
+.tab { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tab th, .tab td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--linha); }
+.tab thead th {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--superficie-2);
+}
+.tab tbody tr:last-child td { border-bottom: 0; }
+.tab td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.tab th.n { text-align: right; }
+.tab-rolagem { overflow-x: auto; }
+
+/* ---------- grade ---------- */
+
+.grade { display: grid; gap: 14px; }
+.g-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.g-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .g-3, .g-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .g-2, .g-3, .g-4 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- entrada orquestrada ---------- */
+
+@keyframes surge {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.surge { animation: surge 0.42s cubic-bezier(0.2, 0.7, 0.3, 1) both; }
+.d1 { animation-delay: 0.04s; }
+.d2 { animation-delay: 0.1s; }
+.d3 { animation-delay: 0.16s; }
+.d4 { animation-delay: 0.22s; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
