@@ -28,6 +28,18 @@ function larg(v: number, linha: { mae: number; maeNaive: number }): number {
     sub="Erro do modelo contra a referência ingênua — repetir o preço da semana passada."
   />
 
+  <!--
+    Marcação obrigatória (CLAUDE.md): número de acurácia nesta tela é FICTÍCIO e
+    não pode ser lido como resultado de backtest. É a tela que mais facilmente
+    vira print em apresentação, então o aviso fica acima dos números, não abaixo.
+  -->
+  <p class="ficticio-forte">
+    <span class="ff-tag">números fictícios</span>
+    Os valores de MAE, RMSE e cobertura abaixo saem de um gerador determinístico
+    em <code>src/dados/exemplo.ts</code>. <strong>Não são resultado de backtest</strong>
+    e não medem o modelo do Atlas. Servem para demonstrar a tela.
+  </p>
+
   <section
     class="cartao veredito surge d1"
     :class="perde > 0 ? 'ruim' : 'bom'"
@@ -121,6 +133,38 @@ function larg(v: number, linha: { mae: number; maeNaive: number }): number {
 </template>
 
 <style scoped>
+/* Aviso de dado fictício: usa o token de atenção, mas sem virar "cartão" —
+   é uma faixa de leitura obrigatória antes da tabela, não um bloco de conteúdo. */
+.ficticio-forte {
+  /* Bloco, não flex: em flex cada trecho de texto vira item e o `gap` abre
+     folga antes da pontuação. O selo se posiciona sozinho, inline. */
+  display: block;
+  margin-bottom: 14px;
+  padding: 10px 13px;
+  border-radius: var(--raio-2, 8px);
+  border: 1px dashed color-mix(in srgb, var(--atencao) 46%, transparent);
+  background: var(--atencao-veu);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tinta-2);
+  max-width: 82ch;
+}
+.ff-tag {
+  display: inline-block;
+  margin-right: 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fundo);
+  background: var(--atencao);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+.ficticio-forte strong { color: var(--tinta); font-weight: 600; }
+.ficticio-forte code { font-family: var(--mono); font-size: 12px; color: var(--tinta-2); }
+
 .veredito { display: flex; gap: 14px; padding: 16px 18px; margin-bottom: 14px; align-items: flex-start; }
 .veredito.ruim { background: var(--atencao-veu); border-color: color-mix(in srgb, var(--atencao) 32%, transparent); }
 .veredito.bom { background: var(--cai-veu); border-color: color-mix(in srgb, var(--cai) 32%, transparent); }

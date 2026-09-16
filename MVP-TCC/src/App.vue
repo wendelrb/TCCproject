@@ -248,6 +248,13 @@ const GRUPOS = [
   .marca-txt, .semana { display: none; }
 }
 @media (max-width: 480px) {
-  .sel select { max-width: 130px; }
+  /* Em 390px a barra somava 423px e empurrava o botão de tema para fora, o que
+     fazia a PÁGINA rolar na horizontal. O selo de dado fictício é marcação
+     obrigatória e não encolhe, então o espaço sai do resto: gap, recuo lateral
+     e a largura do seletor. */
+  .barra { gap: 8px; padding: 0 10px; }
+  .sel { min-width: 0; }
+  .sel select { max-width: 96px; }
+  .selo-ficticio { padding-inline: 6px; }
 }
 </style>
