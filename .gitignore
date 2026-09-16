@@ -12,4 +12,7 @@ demo-diesel.html
 
 # Arquivos brutos da ANP. Não versionar: são ~150 MB e a fonte é pública —
 # quem precisa baixa. O que fica registrado é o HASH, em DATA_PROVENANCE.md.
-dados/
+#
+# A barra inicial é obrigatória: sem ela o padrão casa em qualquer
+# profundidade e engole MVP-TCC/src/dados/, que é código do front.
+/dados/
